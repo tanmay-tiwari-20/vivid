@@ -1,6 +1,6 @@
 # Vivid Media Works
 
-A responsive, single-page influencer agency demo built with **Next.js App Router, React, and strict TypeScript**. Black, warm white, and electric lime; locally hosted typography and photography; responsive creator and campaign layouts.
+A responsive, single-page influencer agency demo built with **Next.js App Router, React, and strict TypeScript**. White and logo green (#1EC89A) with dark neutral text; locally hosted typography and photography; responsive creator and campaign layouts.
 
 ## Run locally
 
@@ -31,7 +31,7 @@ npm start
 
 ## Customization
 
-- **Logo:** replace `public/images/vivid-logo-dark.png`. The original is preserved as `public/images/vivid-logo-original.png`.
+- **Logo:** replace `public/images/vivid-logo-light.png`. The dark-background variant and original are preserved as `public/images/vivid-logo-dark.png` and `public/images/vivid-logo-original.png`.
 - **Campaigns:** edit the typed `campaigns` data in `src/App.tsx`. Images and videos are stored under `public/`.
 - **Creators, brands, services, strategy:** edit `src/Sections.tsx`.
 - **Colors and main layout:** `src/styles.css`; additional section styles: `src/sections.css`.
