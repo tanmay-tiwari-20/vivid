@@ -3,48 +3,76 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode, type CSSProperties } from 'react';
 import { ArrowUpRight, ArrowRight, ArrowLeft, ArrowDown, Play, Menu, X, Plus, Instagram, Eye, Users, Check, Download, Sparkles } from 'lucide-react';
 import { About, Brands, Creators, Strategy, Footer, type ContactType } from './Sections';
+import Link from 'next/link';
+import type { Reel, Creator, SiteContent } from './lib/content-types';
+import { ContentFilters, EmptyContent, usePublicContent } from './ContentBrowser';
+import ReelPlayer from './ReelPlayer';
+import Work from './Work';
+import CreatorsPage from './CreatorsPage';
 
 type ContactHandler = (type: ContactType) => void;
-type Campaign = {
-  id: string; brand: string; creator: string; category: string; title: string;
-  views: string; reach: string; image: string; video: string; color: string; description: string;
-};
+type Campaign = Reel;
 type CampaignHandler = (campaign: Campaign) => void;
 type Brief = { name: string; email: string; company: string; message: string; type: ContactType };
 
-const campaigns: Campaign[] = [
-  { id: 'everyday', brand: 'Nykaa', creator: 'Anaya Mehra', category: 'BEAUTY & LIFESTYLE', title: 'A little everyday glow.', views: '3.1M', reach: '2.2M', image: '/images/creator-beauty.jpg', video: '/videos/beauty.mp4', color: '#e6f8f2', description: 'A getting-ready story that makes a daily ritual feel a little more special. Built around honest moments, personal expression, and a creator’s own point of view.' },
-  { id: 'city', brand: 'boAt', creator: 'Rohan Sen', category: 'MUSIC & CULTURE', title: 'Your city. Your soundtrack.', views: '2.4M', reach: '1.8M', image: '/images/creator-lifestyle.jpg', video: '/videos/lifestyle.mp4', color: '#e6f8f2', description: 'An everyday city adventure with a soundtrack of its own. A culture-led concept that brings a product into the moments an audience already cares about.' },
-  { id: 'movement', brand: 'PUMA', creator: 'Ishaan Rao', category: 'FITNESS & MOVEMENT', title: 'Find your next gear.', views: '1.8M', reach: '1.2M', image: '/images/creator-fitness.jpg', video: '/videos/fitness.mp4', color: '#e6f8f2', description: 'From the first stretch to the last sprint. An energetic movement story about showing up for yourself, with the brand naturally part of the journey.' },
-  { id: 'style', brand: 'Myntra', creator: 'Meera Sethi', category: 'FASHION & SELF-EXPRESSION', title: 'Wear your own kind of bold.', views: '2.7M', reach: '1.9M', image: '/images/creator-fashion.jpg', video: '/videos/fashion.mp4', color: '#e6f8f2', description: 'One personality, a whole new perspective. A fashion concept that gives the creator room to make the style their own and invite their community into the story.' },
-  { id: 'moments', brand: 'Spotify', creator: 'Rohan Sen', category: 'LIFESTYLE & DISCOVERY', title: 'A mood for every moment.', views: '1.6M', reach: '980K', image: '/images/creator-lifestyle.jpg', video: '/videos/lifestyle.mp4', color: '#e6f8f2', description: 'Small daily moments become a story worth sharing. A music-led concept that connects personal routines with the joy of discovering something new.' },
-];
-
-function Nav({ onContact }: { onContact: ContactHandler }) {
+function Nav({ onContact, page }: { onContact: ContactHandler; page: string }) {
   const [open, setOpen] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const header = useRef<HTMLElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const scrollPosition = () => Math.max(0, Math.min(window.scrollY, document.documentElement.scrollHeight - window.innerHeight));
+    let previousY = scrollPosition();
+    let movement = 0;
+    let frame = 0;
+    setHidden(false);
+    const update = () => {
+      frame = 0;
+      const currentY = scrollPosition();
+      const delta = currentY - previousY;
+      previousY = currentY;
+      if (open || currentY <= 16 || header.current?.querySelector(':focus-visible')) {
+        movement = 0;
+        setHidden(false);
+        return;
+      }
+      if (!delta) return;
+      movement = Math.sign(delta) === Math.sign(movement) ? movement + delta : delta;
+      if (Math.abs(movement) < 8) return;
+      setHidden(movement > 0 && currentY > (header.current?.offsetHeight ?? 76));
+      movement = 0;
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.cancelAnimationFrame(frame);
+    };
+  }, [open, page]);
   useEffect(() => {
     if (!open) return;
     const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); menuButton.current?.focus(); } };
     window.addEventListener('keydown', close);
     return () => window.removeEventListener('keydown', close);
   }, [open]);
-  return <header className="site-header">
+  return <div className="nav-space"><header ref={header} className={`site-header${hidden && !open ? ' is-hidden' : ''}`} onFocusCapture={() => setHidden(false)}>
     <div className="container nav-inner">
-      <a className="brand-logo" href="#home" aria-label="Vivid Media Works home" onClick={() => setOpen(false)}><img src="/images/vivid-logo-light.png" alt="Vivid Media Works" width="152" height="74" /></a>
-      <nav className="desktop-nav" aria-label="Main navigation"><a href="#about">Who we are</a><a href="#work">Our work</a><a href="#creators">The creators</a><a href="#strategy">Our approach</a></nav>
+      <Link className="brand-logo" href="/" aria-label="Vivid Media Works home" onClick={() => setOpen(false)}><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98" /></Link>
+      <nav className="desktop-nav" aria-label="Main navigation"><Link href="/#about">Who we are</Link><Link href="/work" aria-current={page === 'work' ? 'page' : undefined}>Our work</Link><Link href="/creators" aria-current={page === 'creators' ? 'page' : undefined}>The creators</Link><Link href="/#strategy">Our approach</Link></nav>
       <button className="nav-cta" onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={17} /></button>
       <button ref={menuButton} className="menu-toggle icon-button" onClick={() => setOpen(!open)} aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="mobile-nav">{open ? <X /> : <Menu />}</button>
     </div>
-    {open && <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">{[['Who we are', '#about'], ['Our work', '#work'], ['The creators', '#creators'], ['Our approach', '#strategy']].map(([label, href]) => <a key={href} href={href} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={20} /></a>)}<button onClick={() => { setOpen(false); menuButton.current?.focus(); onContact('brand'); }}>Let’s talk <ArrowUpRight size={20} /></button></nav>}
-  </header>;
+    {open && <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">{[['Who we are', '/#about'], ['Our work', '/work'], ['The creators', '/creators'], ['Our approach', '/#strategy']].map(([label, href]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={20} /></Link>)}<button onClick={() => { setOpen(false); menuButton.current?.focus(); onContact('brand'); }}>Let’s talk <ArrowUpRight size={20} /></button></nav>}
+  </header></div>;
 }
 
 function Star({ className = '' }) {
   return <svg className={className} viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M50 0 58 32 85 15 68 42 100 50 68 58 85 85 58 68 50 100 42 68 15 85 32 58 0 50 32 42 15 15 42 32Z" fill="currentColor" /></svg>;
 }
 
-function Hero({ onContact, onCampaign }: { onContact: ContactHandler; onCampaign: CampaignHandler }) {
+function Hero({ onContact, creators, onCreator }: { onContact: ContactHandler; creators: Creator[]; onCreator: (creator: Creator) => void }) {
   return <section id="home" className="hero">
     <div className="container hero-grid">
       <div className="hero-copy">
@@ -52,14 +80,14 @@ function Hero({ onContact, onCampaign }: { onContact: ContactHandler; onCampaign
         <h1>Don’t just<br />show up.<br /><span>Stand out.</span><Star className="heading-star" /></h1>
         <p>We bring brands, creators, and culture together.<br className="desktop-break" /> For content that connects. And influence that lasts.</p>
         <div className="hero-actions"><button className="button button-lime" onClick={() => onContact('brand')}>Let’s make it vivid <ArrowUpRight size={20} /></button><a className="text-button" href="#work"><span className="small-play"><Play size={12} fill="currentColor" /></span> Explore the work</a></div>
-        <div className="hero-social-proof"><div className="mini-avatars"><img src="/images/creator-beauty.jpg" alt="" /><img src="/images/creator-lifestyle.jpg" alt="" /><img src="/images/creator-fashion.jpg" alt="" /><span><Plus size={15} /></span></div><div>Different voices.<br /><strong>One vivid vision.</strong></div></div>
+        <div className="hero-social-proof"><div className="mini-avatars">{creators.slice(0, 3).map(creator => <img key={creator.id} src={creator.image} alt="" />)}<span><Plus size={15} /></span></div><div>Different voices.<br /><strong>One vivid vision.</strong></div></div>
       </div>
-      <div className="hero-art" aria-label="An editorial collage of sample creators">
+      <div className={`hero-art${creators.length < 3 ? ' hero-art-sparse' : ''}`} aria-label="Meet our featured creators">
         <div className="art-orbit orbit-one" /><div className="art-orbit orbit-two" />
         <span className="art-cross cross-one">+</span><span className="art-cross cross-two">+</span>
-        <button className="hero-photo photo-left" onClick={() => onCampaign(campaigns[1])} aria-label="Preview Your city. Your soundtrack."><img src="/images/creator-lifestyle.jpg" alt="Lifestyle creator in an urban setting" fetchPriority="high" /><span className="photo-mini-label"><Instagram size={13} /> REEL PEOPLE.</span><span className="photo-small-play"><Play size={15} fill="currentColor" /></span></button>
-        <button className="hero-photo photo-right" onClick={() => onCampaign(campaigns[0])} aria-label="Preview A little everyday glow."><img src="/images/creator-beauty.jpg" alt="Beauty creator sharing a moment" fetchPriority="high" /><span className="photo-mini-label">REAL CONNECTION.</span></button>
-        <button className="hero-photo photo-main" onClick={() => onCampaign(campaigns[3])} aria-label="Preview Wear your own kind of bold."><img src="/images/creator-fashion.jpg" alt="Fashion creator expressing her personal style" fetchPriority="high" /><span className="photo-topline"><span className="live-dot" /> THE VIVID EFFECT <Instagram size={17} /></span><span className="photo-caption">A little influence.<br />A lot of possibility.<span className="caption-arrow"><ArrowUpRight size={22} /></span></span></button>
+        {creators[1] && <button className="hero-photo photo-left" onClick={() => onCreator(creators[1])} aria-label={`Meet ${creators[1].name}`}><img src={creators[1].image} alt={creators[1].name} fetchPriority="high" /><span className="photo-mini-label"><Instagram size={13} /> {creators[1].name}</span><span className="photo-small-play"><ArrowUpRight size={17} /></span></button>}
+        {creators[2] && <button className="hero-photo photo-right" onClick={() => onCreator(creators[2])} aria-label={`Meet ${creators[2].name}`}><img src={creators[2].image} alt={creators[2].name} fetchPriority="high" /><span className="photo-mini-label">{creators[2].specialty}</span></button>}
+        {creators[0] ? <button className="hero-photo photo-main" onClick={() => onCreator(creators[0])} aria-label={`Meet ${creators[0].name}`}><img src={creators[0].image} alt={creators[0].name} fetchPriority="high" /><span className="photo-topline"><span className="live-dot" /> THE VIVID EFFECT <Instagram size={17} /></span><span className="photo-caption">{creators[0].name}<br /><small>{creators[0].specialty}</small><span className="caption-arrow"><ArrowUpRight size={22} /></span></span></button> : <Link className="hero-photo photo-main hero-placeholder" href="/creators"><Star /><span>Different voices.<br />Endless possibility.<ArrowUpRight /></span></Link>}
         <div className="creator-sticker"><Star /><span>CREATOR<br /><strong>POWERED.</strong></span></div>
         <div className="impact-sticker"><span className="impact-icon"><ArrowUpRight size={23} /></span><span>Made to stop<br /><strong>the scroll.</strong></span><svg viewBox="0 0 80 38" aria-hidden="true"><path d="m2 31 14-8 11 5 13-18 10 7L76 2" /><path d="M61 2h15v15" /></svg></div>
         <div className="scribble-note">a little different.<br />a lot more vivid.<svg viewBox="0 0 100 50" aria-hidden="true"><path d="M2 5C17 39 57 36 81 16M69 13l15 1-5 15" /></svg></div>
@@ -69,27 +97,36 @@ function Hero({ onContact, onCampaign }: { onContact: ContactHandler; onCampaign
   </section>;
 }
 
-function Campaigns({ onCampaign }: { onCampaign: CampaignHandler }) {
+function ReelCard({ campaign, onCampaign }: { campaign: Campaign; onCampaign: CampaignHandler }) {
+  return <article className="campaign-card content-enter">
+    <button className="reel-cover" style={{ '--card-tint': campaign.color } as CSSProperties} onClick={() => onCampaign(campaign)} aria-label={`Watch ${campaign.title}`}><img loading="lazy" src={campaign.image} alt={campaign.title} /><span className="reel-shade" /><span className={`reel-brand brand-${campaign.brand.toLowerCase().replace(/[^a-z]/g, '')}`}>{campaign.brand}</span><span className="reel-type"><Instagram size={13} /> REEL</span><span className="reel-play"><Play size={22} fill="currentColor" /></span><span className="reel-caption"><span>{campaign.category}</span><strong>{campaign.title}</strong>{campaign.creator && <span className="reel-creator">with {campaign.creator}<ArrowUpRight size={18} /></span>}</span></button>
+    {(campaign.views || campaign.reach) && <div className="reel-metrics">{campaign.views && <div><Eye size={15} /><strong>{campaign.views}</strong><span>views</span></div>}{campaign.reach && <div><Users size={14} /><strong>{campaign.reach}</strong><span>reach</span></div>}</div>}
+  </article>;
+}
+
+function Campaigns({ campaigns, onCampaign, fullPage = false }: { campaigns: Campaign[]; onCampaign: CampaignHandler; fullPage?: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState(0);
   const [atEnd, setAtEnd] = useState(false);
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState('All');
+  const categories = Array.from(new Set(campaigns.map(reel => reel.category)));
+  const filtered = campaigns.filter(reel => (category === 'All' || reel.category === category) && `${reel.title} ${reel.brand} ${reel.creator} ${reel.category}`.toLowerCase().includes(query.toLowerCase().trim()));
   const move = (direction: number) => {
     const card = track.current?.querySelector('.campaign-card');
     if (card && track.current) track.current.scrollBy({ left: (card.getBoundingClientRect().width + 22) * direction, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
   };
   const update = () => { const el = track.current; if (el) { setPosition(el.scrollLeft); setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 4); } };
-  useEffect(() => { update(); window.addEventListener('resize', update); return () => window.removeEventListener('resize', update); }, []);
-  return <section id="work" className="campaigns section-space">
+  useEffect(() => { update(); window.addEventListener('resize', update); return () => window.removeEventListener('resize', update); }, [campaigns.length]);
+  return <section id="work" className={`campaigns section-space${fullPage ? ' collection-page' : ''}`}>
     <div className="container">
       <div className="eyebrow"><span /> GOOD CONTENT. GREAT COMPANY.</div>
-      <div className="campaign-heading"><h2>Less scrolling.<br /><span className="serif-accent">More stopping.</span></h2><div className="campaign-intro"><p>Stories made for the feed.<br />Connections made to go beyond it.</p><div className="carousel-controls"><button className="icon-button" onClick={() => move(-1)} disabled={position < 4} aria-label="Previous campaigns"><ArrowLeft size={21} /></button><button className="icon-button" onClick={() => move(1)} disabled={atEnd} aria-label="Next campaigns"><ArrowRight size={21} /></button></div></div></div>
-      <div className="campaign-track" ref={track} onScroll={update} aria-label="Sample campaign reels" aria-roledescription="carousel" tabIndex={0}>
-        {campaigns.map((campaign, i) => <article className="campaign-card" key={campaign.id} aria-label={`${i + 1} of ${campaigns.length}: ${campaign.title}`}>
-          <button className="reel-cover" style={{ '--card-tint': campaign.color } as CSSProperties} onClick={() => onCampaign(campaign)} aria-label={`Watch ${campaign.title}`}><img loading="lazy" src={campaign.image} alt={`${campaign.category.toLowerCase()} campaign concept`} /><span className="reel-shade" /><span className={`reel-brand brand-${campaign.brand.toLowerCase()}`}>{campaign.brand}</span><span className="reel-type"><Instagram size={13} /> REEL</span><span className="reel-play"><Play size={22} fill="currentColor" /></span><span className="reel-caption"><span>{campaign.category}</span><strong>{campaign.title}</strong><span className="reel-creator">with {campaign.creator}<ArrowUpRight size={18} /></span></span></button>
-          <div className="reel-metrics"><div><Eye size={15} /><strong>{campaign.views}</strong><span>views</span></div><div><Users size={14} /><strong>{campaign.reach}</strong><span>reach</span></div></div>
-        </article>)}
-      </div>
-      <div className="campaign-footnote"><span><span className="tiny-dot" /> A LITTLE TASTE OF WHAT’S POSSIBLE</span><p>Demo showcase · Brands, creators & figures are illustrative.</p></div>
+      <div className="campaign-heading"><h2>Less scrolling.<br /><span className="serif-accent">More stopping.</span></h2><div className="campaign-intro"><p>Stories made for the feed.<br />Connections made to go beyond it.</p>{!fullPage && <div className="carousel-controls"><button className="icon-button" onClick={() => move(-1)} disabled={position < 4} aria-label="Previous campaigns"><ArrowLeft size={21} /></button><button className="icon-button" onClick={() => move(1)} disabled={atEnd || !campaigns.length} aria-label="Next campaigns"><ArrowRight size={21} /></button></div>}</div></div>
+      {fullPage && <ContentFilters query={query} setQuery={setQuery} category={category} setCategory={setCategory} categories={categories} label="reels" count={filtered.length} />}
+      {filtered.length ? <div className={fullPage ? 'reels-grid' : 'campaign-track'} ref={track} onScroll={update} aria-label={fullPage ? 'All campaign reels' : 'Featured campaign reels'} aria-roledescription={fullPage ? undefined : 'carousel'} tabIndex={fullPage ? undefined : 0}>
+        {filtered.map(campaign => <ReelCard key={campaign.id} campaign={campaign} onCampaign={onCampaign} />)}
+      </div> : <EmptyContent title={query || category !== 'All' ? 'No reels match this search.' : 'The next story is on its way.'} text={query || category !== 'All' ? 'Try another name, brand, or category.' : 'Check back soon for fresh stories from our creators.'} />}
+      <div className="campaign-footnote"><span><span className="tiny-dot" /> {fullPage ? 'STORIES WITH A POINT OF VIEW' : 'A LITTLE TASTE OF WHAT’S POSSIBLE'}</span>{!fullPage && <Link className="vmw-text-link" href="/work">Explore all work <ArrowUpRight size={17} /></Link>}{campaigns.some(reel => reel.demo) && <p>Sample campaigns and figures are illustrative.</p>}</div>
     </div>
   </section>;
 }
@@ -107,7 +144,7 @@ function Modal({ children, onClose, title, className = '' }: { children: ReactNo
       if (e.key === 'Escape') closeRef.current();
       if (e.key !== 'Tab') return;
       if (!ref.current) return;
-      const items = Array.from(ref.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input, select, textarea, video[controls], [tabindex="0"]')).filter(el => el.getClientRects().length);
+      const items = Array.from(ref.current.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], input, select, textarea, video[controls], iframe, [tabindex="0"]')).filter(el => el.getClientRects().length);
       const first = items[0], last = items[items.length - 1];
       if (e.shiftKey && (document.activeElement === first || document.activeElement === ref.current || !ref.current.contains(document.activeElement))) { e.preventDefault(); last?.focus(); }
       else if (!e.shiftKey && (document.activeElement === last || document.activeElement === ref.current || !ref.current.contains(document.activeElement))) { e.preventDefault(); first?.focus(); }
@@ -118,9 +155,12 @@ function Modal({ children, onClose, title, className = '' }: { children: ReactNo
   return <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}><div className={`modal ${className}`} role="dialog" aria-modal="true" aria-label={title} ref={ref} tabIndex={-1}><button className="modal-close icon-button" onClick={onClose} aria-label="Close dialog"><X size={21} /></button>{children}</div></div>;
 }
 
-function CampaignModal({ campaign, onClose, onContact }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler }) {
-  const [failed, setFailed] = useState(false);
-  return <Modal onClose={onClose} title={campaign.title} className="campaign-modal"><div className="modal-video-wrap">{!failed ? <video src={campaign.video} poster={campaign.image} controls playsInline autoPlay muted loop preload="metadata" onError={() => setFailed(true)} aria-label={`Illustrative stock reel for ${campaign.title}`} /> : <div className="reel-fallback"><img src={campaign.image} alt={campaign.title} /><span>Campaign concept preview</span></div>}<span className="video-stock-label">ILLUSTRATIVE STOCK FOOTAGE</span></div><div className="campaign-detail"><div className="eyebrow"><span /> THE CAMPAIGN CONCEPT</div><span className="detail-brand">{campaign.brand}</span><h2>{campaign.title}</h2><p>{campaign.description}</p><div className="detail-creator">Creative direction with <strong>{campaign.creator}</strong></div><div className="detail-metrics"><div><strong>{campaign.views}</strong><span>Example views</span></div><div><strong>{campaign.reach}</strong><span>Example reach</span></div></div><button className="button button-lime" onClick={() => onContact('brand')}>Create a story like this <ArrowUpRight size={18} /></button><p className="disclosure">A demo concept with stock media and fictional creator profiles. Brand associations and metrics are illustrative.</p></div></Modal>;
+function CampaignModal({ campaign, onClose, onContact, creator, onCreator }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler; creator?: Creator; onCreator: (creator: Creator) => void }) {
+  return <Modal onClose={onClose} title={campaign.title} className="campaign-modal"><ReelPlayer reel={campaign} /><div className="campaign-detail"><div className="eyebrow"><span /> {campaign.category}</div><span className="detail-brand">{campaign.brand}</span><h2>{campaign.title}</h2><p>{campaign.description}</p>{campaign.creator && <div className="detail-creator">Created with {creator ? <button className="creator-inline-link" onClick={() => onCreator(creator)}>{creator.name}<ArrowUpRight size={14} /></button> : <strong>{campaign.creator}</strong>}</div>}{(campaign.views || campaign.reach) && <div className="detail-metrics">{campaign.views && <div><strong>{campaign.views}</strong><span>{campaign.demo ? 'Example views' : 'Views'}</span></div>}{campaign.reach && <div><strong>{campaign.reach}</strong><span>{campaign.demo ? 'Example reach' : 'Reach'}</span></div>}</div>}<button className="button button-lime" onClick={() => onContact('brand')}>Create a story like this <ArrowUpRight size={18} /></button>{campaign.demo && <p className="disclosure">A sample concept with stock media. Creator profiles, brand associations, and figures are illustrative.</p>}</div></Modal>;
+}
+
+function CreatorModal({ creator, reels, onClose, onContact, onCampaign }: { creator: Creator; reels: Reel[]; onClose: () => void; onContact: ContactHandler; onCampaign: CampaignHandler }) {
+  return <Modal onClose={onClose} title={creator.name} className="campaign-modal creator-modal"><div className="creator-profile-image"><img src={creator.image} alt={creator.name} /><span>{creator.specialty}</span></div><div className="campaign-detail"><div className="eyebrow"><span /> {creator.category}</div><h2>{creator.name}</h2>{creator.handle && <p className="creator-handle">{creator.handle}</p>}<p>{creator.bio || creator.specialty}</p>{creator.followers && <div className="detail-metrics"><div><strong>{creator.followers}</strong><span>Followers{creator.demo ? ' · illustrative' : ''}</span></div></div>}{creator.profileUrl && <a className="vmw-text-link creator-social" href={creator.profileUrl} target="_blank" rel="noopener noreferrer">Visit social profile <ArrowUpRight size={17} /></a>}{reels.length > 0 && <div className="creator-related"><h3>Stories with {creator.name.split(' ')[0]}</h3>{reels.map(reel => <button key={reel.id} onClick={() => onCampaign(reel)}><img src={reel.image} alt="" /><span>{reel.title}<small>{reel.brand}</small></span><Play size={15} /></button>)}</div>}<button className="button button-lime" onClick={() => onContact('brand')}>Let’s collaborate <ArrowUpRight size={18} /></button>{creator.demo && <p className="disclosure">An illustrative creator profile using stock photography.</p>}</div></Modal>;
 }
 
 function ContactModal({ initialType, onClose }: { initialType: ContactType; onClose: () => void }) {
@@ -141,9 +181,42 @@ function ContactModal({ initialType, onClose }: { initialType: ContactType; onCl
   </Modal>;
 }
 
-export default function App() {
-  const [campaign, setCampaign] = useState<Campaign | null>(null);
+export default function App({ initialContent, page = 'home' }: { initialContent: SiteContent; page?: 'home' | 'work' | 'creators' }) {
+  const content = usePublicContent(initialContent);
+  const [campaignId, setCampaignId] = useState<string | null>(null);
+  const [creatorId, setCreatorId] = useState<string | null>(null);
   const [contact, setContact] = useState<ContactType | null>(null);
-  const onContact: ContactHandler = type => { setCampaign(null); setContact(type); };
-  return <><a href="#main" className="skip-link">Skip to content</a><Nav onContact={onContact} /><main id="main"><Hero onContact={onContact} onCampaign={setCampaign} /><About /><Brands /><Campaigns onCampaign={setCampaign} /><Creators onContact={onContact} /><Strategy /></main><Footer onContact={onContact} />{campaign && <CampaignModal campaign={campaign} onClose={() => setCampaign(null)} onContact={onContact} />}{contact && <ContactModal initialType={contact} onClose={() => setContact(null)} />}</>;
+  const campaign = content.reels.find(reel => reel.id === campaignId);
+  const creator = content.creators.find(profile => profile.id === creatorId);
+  const featuredCreators = content.creators.filter(profile => profile.featured);
+  useEffect(() => {
+    if (page !== 'home' || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const elements = document.querySelectorAll<HTMLElement>('.home-page .vmw-service, .home-page .vmw-brand-card, .home-page .campaign-card, .home-page .vmw-creator, .home-page .vmw-strategy-intro');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.remove('home-reveal-pending');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    elements.forEach(element => {
+      if (element.getBoundingClientRect().top > window.innerHeight) {
+        element.dataset.homeReveal = '';
+        element.classList.add('home-reveal-pending');
+        observer.observe(element);
+      }
+    });
+    return () => {
+      observer.disconnect();
+      elements.forEach(element => {
+        element.classList.remove('home-reveal-pending');
+        delete element.dataset.homeReveal;
+      });
+    };
+  }, [page, content]);
+  const onContact: ContactHandler = type => { setCampaignId(null); setCreatorId(null); setContact(type); };
+  const onCampaign = (reel: Reel) => { setCreatorId(null); setCampaignId(reel.id); };
+  const onCreator = (profile: Creator) => { setCampaignId(null); setCreatorId(profile.id); };
+  return <div className={page === 'home' ? 'home-page' : page === 'work' ? 'work-page' : 'creators-page'}><a href="#main" className="skip-link">Skip to content</a><Nav onContact={onContact} page={page} /><main id="main">{page === 'home' ? <><Hero onContact={onContact} creators={featuredCreators} onCreator={onCreator} /><About /><Brands brands={content.brands} /><Campaigns campaigns={content.reels.filter(reel => reel.featured)} onCampaign={onCampaign} /><Creators creators={featuredCreators} onCreator={onCreator} onContact={onContact} /><Strategy /></> : page === 'work' ? <Work campaigns={content.reels} brands={content.brands} onCampaign={onCampaign} /> : <CreatorsPage creators={content.creators} onCreator={onCreator} onContact={onContact} />}</main><Footer onContact={onContact} />{campaign && <CampaignModal key={campaign.id} campaign={campaign} onClose={() => setCampaignId(null)} onContact={onContact} creator={content.creators.find(profile => profile.id === campaign.creatorId)} onCreator={onCreator} />}{creator && <CreatorModal key={creator.id} creator={creator} reels={content.reels.filter(reel => reel.creatorId === creator.id)} onClose={() => setCreatorId(null)} onContact={onContact} onCampaign={onCampaign} />}{contact && <ContactModal initialType={contact} onClose={() => setContact(null)} />}</div>;
 }

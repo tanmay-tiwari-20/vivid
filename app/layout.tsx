@@ -2,6 +2,16 @@ import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
 import '../src/styles.css';
 import '../src/sections.css';
+import '../src/content.css';
+import '../src/brands.css';
+import '../src/home.css';
+import '../src/home-sections.css';
+import '../src/home-brands.css';
+import '../src/work.css';
+import '../src/work-hero.css';
+import '../src/work-brands.css';
+import '../src/creators.css';
+import '../src/creators-hero.css';
 
 const manrope = localFont({
   src: '../public/fonts/manrope-variable.woff2',

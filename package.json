@@ -7,7 +7,9 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/content-backend.mjs tests/admin-reliability.mjs",
+    "test:cms": "node --env-file=.env.local scripts/test-cms.mjs"
   },
   "dependencies": {
     "next": "^16.0.0",

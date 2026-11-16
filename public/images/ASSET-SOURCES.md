@@ -2,9 +2,15 @@
 
 ## Logo
 
-- `vivid-logo-original.png`: user-supplied logo, copied unchanged from the provided attachment.
-- `vivid-logo-dark.png`: tightly cropped 290 × 150 transparent adaptation for the dark demo; original letterforms preserved, dark lettering changed to warm off-white, green arrows retained.
-- `vivid-logo-preview.png`: QA preview against the website background. Use `vivid-logo-dark.png` in the website, not this preview.
+- `vivid-logo.svg`: primary logo for light backgrounds, used throughout the site and Studio. Four asymmetric cut-paper forms create an abstract motion bloom, paired with original rounded lowercase lettering and emerald dots. The existing emerald (`#1EC89A`) and deep green (`#172822`) palette is preserved. All lettering is drawn as vector paths; no fonts or remote assets are required. The 289 × 98 viewBox matches the existing site placements.
+- `vivid-logo-inverse.svg`: white lettering with the emerald accent for dark backgrounds.
+- `vivid-logo-mono.svg`: single-color deep green version for print or monochrome use.
+- `vivid-mark.svg` and `vivid-mark.png`: standalone motion bloom symbol as a vector and a high-resolution transparent PNG. The same geometry is used in `public/favicon.svg`.
+- `vivid-logo.png` and `vivid-logo-inverse.png`: high-resolution transparent PNG exports, 1734 × 588 pixels.
+- `docs/previews/vivid-logo-redesign.png`: presentation showing the abstract logo, inverse version, standalone symbol at several sizes, and palette.
+- Regenerate the redesigned assets with `node scripts/generate-brand-assets.mjs`.
+- `vivid-logo-original.png`: user-supplied logo, retained unchanged.
+- `vivid-logo-light.png`, `vivid-logo-dark.png`, and `vivid-logo-preview.png`: retained raster versions from the earlier site design.
 
 ## Stock imagery
 

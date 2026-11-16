@@ -1,0 +1,191 @@
+/* A spacious brand showcase for the work portfolio. */
+.work-page .work-brands {
+  padding-block: 88px 74px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 94px;
+}
+.work-page .work-brands-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 64px;
+  margin-bottom: 42px;
+}
+.work-page .work-brands-heading > div { min-width: 0; }
+.work-page .work-brands-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.work-page .work-brands-kicker > span { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); flex-shrink: 0; }
+.work-page .work-brands-heading h2 {
+  margin-top: 20px;
+  font-size: clamp(43px, 4.3vw, 62px);
+  font-weight: 650;
+  letter-spacing: -.055em;
+  line-height: 1.04;
+}
+.work-page .work-brands-heading h2 em {
+  color: var(--work-ink);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  letter-spacing: -.055em;
+  line-height: 1.14;
+}
+.work-page .work-brands-intro { max-width: 325px; padding-bottom: 6px; }
+.work-page .work-brands-intro > svg { color: var(--work-ink); margin-bottom: 15px; }
+.work-page .work-brands-intro > p { color: var(--muted); font-size: 13px; line-height: 1.85; text-wrap: pretty; }
+.work-page .work-brands-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.work-page .work-brands-grid[data-count="1"] { grid-template-columns: minmax(0, 1fr); max-width: 520px; }
+.work-page .work-brands-grid[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.work-page .work-brands-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 280px;
+  padding: 24px 28px 20px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--bg);
+  transition: background .3s, border-color .3s, transform .3s, box-shadow .3s;
+}
+.work-page .work-brands-card:nth-child(2),
+.work-page .work-brands-card:nth-child(4),
+.work-page .work-brands-card:nth-child(6n) { background: var(--surface); }
+.work-page .work-brands-card:hover,
+.work-page .work-brands-card:focus-within { border-color: #a0d9c6; background: #edf9f4; transform: translateY(-4px); box-shadow: 0 12px 30px #17282207; }
+.work-page .work-brands-card-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.work-page .work-brands-index { color: var(--muted); font-size: 10px; line-height: 1.7; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
+.work-page .work-brands-card-dot { width: 5px; height: 5px; border: 1px solid #aac8ba; border-radius: 50%; }
+.work-page .work-brands-mark {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 0;
+  min-height: 114px;
+  margin-block: 14px 18px;
+  color: var(--text);
+}
+.work-page .work-brands-mark > img { width: 220px; max-width: 100%; height: 88px; object-fit: contain; }
+.work-page .work-brands-wordmark {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  font-size: 44px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -.05em;
+}
+.work-page .work-brands-wordmark > span { min-width: 0; overflow-wrap: anywhere; }
+.work-page .work-brands-wordmark-boat { font-size: 61px; font-weight: 800; letter-spacing: -.09em; }
+.work-page .work-brands-wordmark-puma { font-size: 50px; font-weight: 800; font-stretch: condensed; letter-spacing: -.07em; }
+.work-page .work-brands-wordmark-nykaa { font-family: Georgia, 'Times New Roman', serif; font-size: 58px; font-weight: 700; font-style: italic; letter-spacing: -.075em; }
+.work-page .work-brands-wordmark-spotify { font-size: 37px; font-weight: 750; }
+.work-page .work-brands-wordmark-myntra { font-size: 37px; font-weight: 650; letter-spacing: -.06em; }
+.work-page .work-brands-wordmark-swiggy { font-size: 36px; font-weight: 750; }
+.work-page .work-brands-symbol { width: 36px; height: 36px; flex-shrink: 0; }
+.work-page .work-brands-symbol-pin { width: 28px; height: 38px; }
+.work-page .work-brands-details { min-width: 0; flex: 1; padding-top: 18px; border-top: 1px solid var(--line); }
+.work-page .work-brands-category { color: var(--muted); font-size: 10px; font-weight: 600; letter-spacing: .065em; line-height: 1.8; overflow-wrap: anywhere; }
+.work-page .work-brands-description { color: var(--muted); font-size: 12px; line-height: 1.85; margin-top: 12px; white-space: pre-line; }
+.work-page .work-brands-card-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-top: 10px; }
+.work-page .work-brands-story,
+.work-page .work-brands-website {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+  gap: 8px;
+  padding: 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.6;
+  text-align: left;
+  overflow-wrap: anywhere;
+  transition: color .2s;
+}
+.work-page .work-brands-story-icon { display: grid; place-items: center; width: 25px; height: 25px; flex-shrink: 0; padding-left: 1px; border: 1px solid var(--line); border-radius: 50%; color: var(--work-ink); }
+.work-page .work-brands-story > svg,
+.work-page .work-brands-website > svg { transition: transform .2s; }
+.work-page .work-brands-story:hover,
+.work-page .work-brands-website:hover { color: var(--work-ink); }
+.work-page .work-brands-story:hover > svg,
+.work-page .work-brands-website:hover > svg { transform: translate(2px, -2px); }
+.work-page .work-brands-website { color: var(--muted); margin-left: auto; }
+.work-page .work-brands-footnote { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin-top: 24px; }
+.work-page .work-brands-footnote > span { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 9px; font-weight: 600; letter-spacing: .06em; line-height: 1.8; }
+.work-page .work-brands-footnote > span > span { width: 5px; height: 5px; border-radius: 50%; background: var(--lime); flex-shrink: 0; }
+.work-page .work-brands-footnote > p { color: var(--muted); font-size: 10px; line-height: 1.8; text-align: right; }
+
+@media (max-width: 1150px) {
+  .work-page .work-brands-heading { gap: 40px; }
+  .work-page .work-brands-card { padding-inline: 23px; }
+  .work-page .work-brands-wordmark { font-size: 38px; }
+  .work-page .work-brands-wordmark-boat { font-size: 55px; }
+  .work-page .work-brands-wordmark-puma { font-size: 46px; }
+  .work-page .work-brands-wordmark-nykaa { font-size: 52px; }
+  .work-page .work-brands-wordmark-spotify,
+  .work-page .work-brands-wordmark-myntra,
+  .work-page .work-brands-wordmark-swiggy { font-size: 30px; gap: 8px; }
+  .work-page .work-brands-symbol { width: 30px; height: 30px; }
+  .work-page .work-brands-symbol-pin { width: 24px; height: 32px; }
+}
+@media (max-width: 900px) {
+  .work-page .work-brands { padding-block: 68px 58px; }
+  .work-page .work-brands-heading h2 { font-size: 46px; }
+  .work-page .work-brands-intro { max-width: 260px; }
+  .work-page .work-brands-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .work-page .work-brands-card { min-height: 265px; padding-inline: 28px; }
+  .work-page .work-brands-wordmark-spotify,
+  .work-page .work-brands-wordmark-myntra,
+  .work-page .work-brands-wordmark-swiggy { font-size: 35px; }
+}
+@media (max-width: 600px) {
+  .work-page .work-brands { padding-block: 50px 44px; }
+  .work-page .work-brands-heading { flex-direction: column; align-items: start; gap: 22px; margin-bottom: 28px; }
+  .work-page .work-brands-heading h2 { margin-top: 14px; font-size: clamp(40px, 9vw, 49px); }
+  .work-page .work-brands-intro { display: flex; align-items: start; gap: 14px; max-width: 390px; padding-bottom: 0; }
+  .work-page .work-brands-intro > svg { flex-shrink: 0; width: 22px; height: 22px; margin-top: 4px; margin-bottom: 0; }
+  .work-page .work-brands-intro > p { font-size: 12px; }
+  .work-page .work-brands-grid,
+  .work-page .work-brands-grid[data-count="2"] { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .work-page .work-brands-card { min-height: 250px; padding: 22px 27px 17px; }
+  .work-page .work-brands-mark { min-height: 96px; margin-top: 12px; margin-bottom: 18px; }
+  .work-page .work-brands-wordmark { font-size: 44px; }
+  .work-page .work-brands-wordmark-boat { font-size: 61px; }
+  .work-page .work-brands-wordmark-puma { font-size: 50px; }
+  .work-page .work-brands-wordmark-nykaa { font-size: 58px; }
+  .work-page .work-brands-wordmark-spotify,
+  .work-page .work-brands-wordmark-myntra,
+  .work-page .work-brands-wordmark-swiggy { font-size: 37px; }
+  .work-page .work-brands-symbol { width: 36px; height: 36px; }
+  .work-page .work-brands-symbol-pin { width: 28px; height: 38px; }
+  .work-page .work-brands-category { font-size: 10px; }
+  .work-page .work-brands-footnote { align-items: start; flex-direction: column; gap: 9px; margin-top: 20px; }
+  .work-page .work-brands-footnote > span { font-size: 8px; }
+  .work-page .work-brands-footnote > p { text-align: left; font-size: 9px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-page .work-brands-card,
+  .work-page .work-brands-story,
+  .work-page .work-brands-website,
+  .work-page .work-brands-story > svg,
+  .work-page .work-brands-website > svg { transition: none; }
+  .work-page .work-brands-card:hover,
+  .work-page .work-brands-card:focus-within,
+  .work-page .work-brands-story:hover > svg,
+  .work-page .work-brands-website:hover > svg { transform: none; }
+}
