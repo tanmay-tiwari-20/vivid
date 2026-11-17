@@ -42,12 +42,6 @@ export default function WorkHero({ campaigns, onCampaign }: WorkHeroProps) {
           </div> : <div className="work-hero-placeholder"><HeroStar /><p>Your next story<br /><em>starts here.</em></p><span>A little imagination. Endless possibility.</span></div>}
         </div>
       </div>
-      {featured && <div className="work-hero-story-strip">
-        <span className="work-hero-story-number" aria-hidden="true">01 <span>/ {String(campaigns.length).padStart(2, '0')}</span></span>
-        <div className="work-hero-story-title"><span>THE SPOTLIGHT STORY</span><h2>{featured.title}</h2></div>
-        <div className="work-hero-story-detail">{featured.description && <p>{featured.description}</p>}{featured.creator && <span>Created with <strong>{featured.creator}</strong></span>}</div>
-        <button className="work-hero-story-open" onClick={() => onCampaign(featured)} aria-label={`Explore ${featured.title}`}><ArrowUpRight size={23} aria-hidden="true" /></button>
-      </div>}
       <div className="work-hero-footnote"><span><span className="tiny-dot" /> REAL VOICES. SHARED CREATIVE ENERGY.</span>{campaigns.some(campaign => campaign.demo) && <p>Sample concepts and figures are illustrative.</p>}</div>
     </div>
   </section>;

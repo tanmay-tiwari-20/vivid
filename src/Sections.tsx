@@ -23,7 +23,7 @@ export function About() {
     <section className="vmw-about container" id="about" aria-labelledby="about-heading">
       <div className="vmw-about-intro">
         <div className="vmw-section-kicker"><span className="eyebrow">THE VIVID WAY</span><span className="vmw-kicker-number">01 — ABOUT US</span></div>
-        <h2 id="about-heading" className="vmw-about-statement">We don’t just put your brand in the feed. <span className="vmw-muted-text">We make it part of</span> <span className="vmw-lime-text">the conversation.</span></h2>
+        <div><h2 id="about-heading" className="vmw-about-statement">We don’t just put your brand in the feed. <span className="vmw-muted-text">We make it part of</span> <span className="vmw-lime-text">the conversation.</span></h2><Link className="vmw-text-link" href="/about" style={{ marginTop: 24 }}>Get to know Vivid <ArrowUpRight size={17} /></Link></div>
       </div>
       <div className="vmw-services">
         {services.map(({ icon: Icon, number, title, text }) => (
@@ -128,7 +128,7 @@ export function Strategy() {
   return (
     <section className="vmw-strategy" id="strategy" aria-labelledby="strategy-heading">
       <div className="container vmw-strategy-layout">
-        <div className="vmw-strategy-intro"><span className="eyebrow">THE METHOD BEHIND THE MAGIC</span><h2 className="section-heading" id="strategy-heading">Less guesswork.<br/>More <span className="vmw-lime-text">game plan.</span></h2><p>Great content doesn’t happen by accident.<br/>Here’s how we make every move count.</p><div className="vmw-strategy-signoff"><Asterisk size={56} strokeWidth={1.3}/><span>BUILT ON INSIGHT.<br/>BROUGHT TO LIFE BY PEOPLE.</span></div></div>
+        <div className="vmw-strategy-intro"><span className="eyebrow">THE METHOD BEHIND THE MAGIC</span><h2 className="section-heading" id="strategy-heading">Less guesswork.<br/>More <span className="vmw-lime-text">game plan.</span></h2><p>Great content doesn’t happen by accident.<br/>Here’s how we make every move count.</p><Link className="vmw-text-link" href="/approach" style={{ marginTop: 20 }}>Explore our approach <ArrowUpRight size={17} aria-hidden="true" /></Link><div className="vmw-strategy-signoff"><Asterisk size={56} strokeWidth={1.3}/><span>BUILT ON INSIGHT.<br/>BROUGHT TO LIFE BY PEOPLE.</span></div></div>
         <div className="vmw-strategy-steps">
           {strategySteps.map((step, index) => {
             const open = active === index;
@@ -147,7 +147,7 @@ export function Footer({ onContact }: ContactProps) {
   return (
     <footer id="contact" className="vmw-footer">
       <div className="vmw-footer-cta"><div className="container"><div className="vmw-footer-cta-top"><span>GOT A BIG IDEA? WE’RE ALL EARS.</span><Asterisk size={29} strokeWidth={1.5}/></div><div className="vmw-footer-cta-main"><h2>Let’s make<br/>some noise.</h2><button onClick={() => onContact('brand')} className="vmw-footer-contact" aria-label="Start a conversation with Vivid Media Works"><ArrowUpRight strokeWidth={1.1}/><span>LET’S TALK</span></button></div><div className="vmw-footer-cta-bottom"><p>Good things start with a conversation.</p><span>YOUR NEXT CHAPTER, IN VIVID.</span></div></div></div>
-      <div className="container vmw-footer-bottom"><Link href="/" className="vmw-footer-logo" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98"/></Link><nav aria-label="Footer navigation"><Link href="/#about">About</Link><Link href="/work">Our work</Link><Link href="/creators">Creators</Link><Link href="/#strategy">Our approach</Link><button onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={14}/></button></nav></div>
+      <div className="container vmw-footer-bottom"><Link href="/" className="vmw-footer-logo" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98"/></Link><nav aria-label="Footer navigation"><Link href="/about">About</Link><Link href="/work">Our work</Link><Link href="/creators">Creators</Link><Link href="/approach">Our approach</Link><button onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={14}/></button></nav></div>
       <div className="container vmw-footer-fineprint"><p>© {new Date().getFullYear()} Vivid Media Works.</p><p>Made to connect. Built to stand out.</p><a href="#main" aria-label="Back to top">BACK TO TOP <ArrowUpRight size={13}/></a></div>
     </footer>
   );

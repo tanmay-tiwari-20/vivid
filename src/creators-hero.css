@@ -154,6 +154,29 @@
   .creators-page .creators-hero-kicker { font-size: 7px; }
   .creators-page .creators-hero-topline > span:last-child { max-width: 105px; }
 }
+@media (min-width: 701px) {
+  .creators-page .creators-hero { padding-top: 0; }
+  .creators-page .creators-hero > .container { min-height: calc(100svh - var(--site-header-height, 76px)); display: flex; flex-direction: column; }
+  .creators-page .creators-hero-topline { padding-top: 38px; flex-shrink: 0; }
+  .creators-page .creators-hero-heading, .creators-page .creators-hero-footnote { flex-shrink: 0; }
+  .creators-page .creators-hero-montage, .creators-page .creators-hero-empty { margin-block: auto; flex-shrink: 0; }
+  .creators-page .creators-hero-footnote { margin-top: 20px; }
+}
+@media (min-width: 701px) and (max-height: 850px) {
+  .creators-page .creators-hero-topline { padding-top: 24px; }
+  .creators-page .creators-hero-heading { padding-block: 24px 28px; }
+  .creators-page .creators-hero-heading h1 { font-size: clamp(48px, min(6.8vw, 9svh), 76px); }
+  .creators-page .creators-hero-intro { padding-bottom: 4px; }
+  .creators-page .creators-hero-intro > p { font-size: 12px; line-height: 1.8; }
+  .creators-page .creators-hero-intro > a { margin-top: 12px; min-height: 40px; }
+  .creators-page .creators-hero-tile { height: clamp(230px, calc(100svh - 405px), 390px); }
+  .creators-page .creators-hero-quote { padding: 16px 20px; row-gap: 5px; }
+  .creators-page .creators-hero-quote > p { font-size: clamp(18px, 2.1vw, 24px); }
+  .creators-page .creators-hero-portrait-caption { bottom: 20px; }
+  .creators-page .creators-hero-portrait-caption strong { font-size: clamp(20px, 2vw, 25px); }
+  .creators-page .creators-hero-tile-third .creators-hero-portrait-caption strong { font-size: clamp(20px, 1.9vw, 23px); }
+  .creators-page .creators-hero-footnote { margin-top: 16px; padding-block: 16px 22px; }
+}
 @media (prefers-reduced-motion: reduce) {
   .creators-page :where(.creators-hero-intro > a > span, .creators-hero-portrait > img, .creators-hero-portrait-arrow) { transition: none; }
 }

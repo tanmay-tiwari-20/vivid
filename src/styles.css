@@ -16,7 +16,8 @@
 
 /* Compact navigation, with equal side columns to center the desktop links. */
 html { scroll-padding-top: 96px; }
-.nav-space { height: 76px; }
+:root { --site-header-height: 76px; }
+.nav-space { height: var(--site-header-height); }
 .site-header {
   height: 76px;
   position: fixed;
@@ -81,6 +82,7 @@ html { scroll-padding-top: 96px; }
 .nav-cta:hover svg { transform: translate(2px, -2px); }
 
 @media (max-width: 900px) {
+  :root { --site-header-height: 72px; }
   .nav-space { height: 72px; }
   .site-header { height: 72px; }
   .nav-inner { display: flex; gap: 18px; }
@@ -90,6 +92,7 @@ html { scroll-padding-top: 96px; }
   .nav-cta { gap: 10px; padding-inline: 14px; }
 }
 @media (max-width: 700px) {
+  :root { --site-header-height: 68px; }
   html { scroll-padding-top: 88px; }
   .nav-space { height: 68px; }
   .site-header { height: 68px; }

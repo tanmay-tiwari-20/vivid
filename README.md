@@ -2,6 +2,10 @@
 
 A responsive agency website with a private content studio, built with Next.js App Router, React, and strict TypeScript. Reels, creator profiles, and brands share one persistent content store across the home page, `/work`, and `/creators`.
 
+The `/about` page introduces the agency, its creative principles, and approach, with links to the work and creator collective. Its creator imagery also reads from the shared public content store.
+
+The `/approach` page explains the campaign process through keyboard-accessible stage tabs, practical deliverables, campaign capabilities, measurement principles, and FAQs. Its brief buttons open the shared enquiry dialog.
+
 ## Run locally
 
 Requires Node.js 20.9 or later. The test scripts use Node.js 22 or later.

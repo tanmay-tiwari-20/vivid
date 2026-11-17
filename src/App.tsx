@@ -9,6 +9,8 @@ import { ContentFilters, EmptyContent, usePublicContent } from './ContentBrowser
 import ReelPlayer from './ReelPlayer';
 import Work from './Work';
 import CreatorsPage from './CreatorsPage';
+import AboutPage from './AboutPage';
+import ApproachPage from './ApproachPage';
 
 type ContactHandler = (type: ContactType) => void;
 type Campaign = Reel;
@@ -60,11 +62,11 @@ function Nav({ onContact, page }: { onContact: ContactHandler; page: string }) {
   return <div className="nav-space"><header ref={header} className={`site-header${hidden && !open ? ' is-hidden' : ''}`} onFocusCapture={() => setHidden(false)}>
     <div className="container nav-inner">
       <Link className="brand-logo" href="/" aria-label="Vivid Media Works home" onClick={() => setOpen(false)}><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98" /></Link>
-      <nav className="desktop-nav" aria-label="Main navigation"><Link href="/#about">Who we are</Link><Link href="/work" aria-current={page === 'work' ? 'page' : undefined}>Our work</Link><Link href="/creators" aria-current={page === 'creators' ? 'page' : undefined}>The creators</Link><Link href="/#strategy">Our approach</Link></nav>
+      <nav className="desktop-nav" aria-label="Main navigation"><Link href="/about" aria-current={page === 'about' ? 'page' : undefined}>Who we are</Link><Link href="/work" aria-current={page === 'work' ? 'page' : undefined}>Our work</Link><Link href="/creators" aria-current={page === 'creators' ? 'page' : undefined}>The creators</Link><Link href="/approach" aria-current={page === 'approach' ? 'page' : undefined}>Our approach</Link></nav>
       <button className="nav-cta" onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={17} /></button>
       <button ref={menuButton} className="menu-toggle icon-button" onClick={() => setOpen(!open)} aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="mobile-nav">{open ? <X /> : <Menu />}</button>
     </div>
-    {open && <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">{[['Who we are', '/#about'], ['Our work', '/work'], ['The creators', '/creators'], ['Our approach', '/#strategy']].map(([label, href]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={20} /></Link>)}<button onClick={() => { setOpen(false); menuButton.current?.focus(); onContact('brand'); }}>Let’s talk <ArrowUpRight size={20} /></button></nav>}
+    {open && <nav id="mobile-nav" className="mobile-nav" aria-label="Mobile navigation">{[['Who we are', '/about'], ['Our work', '/work'], ['The creators', '/creators'], ['Our approach', '/approach']].map(([label, href]) => <Link key={href} href={href} aria-current={href === `/${page}` ? 'page' : undefined} onClick={() => setOpen(false)}>{label}<ArrowUpRight size={20} /></Link>)}<button onClick={() => { setOpen(false); menuButton.current?.focus(); onContact('brand'); }}>Let’s talk <ArrowUpRight size={20} /></button></nav>}
   </header></div>;
 }
 
@@ -181,7 +183,7 @@ function ContactModal({ initialType, onClose }: { initialType: ContactType; onCl
   </Modal>;
 }
 
-export default function App({ initialContent, page = 'home' }: { initialContent: SiteContent; page?: 'home' | 'work' | 'creators' }) {
+export default function App({ initialContent, page = 'home' }: { initialContent: SiteContent; page?: 'home' | 'work' | 'creators' | 'about' | 'approach' }) {
   const content = usePublicContent(initialContent);
   const [campaignId, setCampaignId] = useState<string | null>(null);
   const [creatorId, setCreatorId] = useState<string | null>(null);
@@ -218,5 +220,5 @@ export default function App({ initialContent, page = 'home' }: { initialContent:
   const onContact: ContactHandler = type => { setCampaignId(null); setCreatorId(null); setContact(type); };
   const onCampaign = (reel: Reel) => { setCreatorId(null); setCampaignId(reel.id); };
   const onCreator = (profile: Creator) => { setCampaignId(null); setCreatorId(profile.id); };
-  return <div className={page === 'home' ? 'home-page' : page === 'work' ? 'work-page' : 'creators-page'}><a href="#main" className="skip-link">Skip to content</a><Nav onContact={onContact} page={page} /><main id="main">{page === 'home' ? <><Hero onContact={onContact} creators={featuredCreators} onCreator={onCreator} /><About /><Brands brands={content.brands} /><Campaigns campaigns={content.reels.filter(reel => reel.featured)} onCampaign={onCampaign} /><Creators creators={featuredCreators} onCreator={onCreator} onContact={onContact} /><Strategy /></> : page === 'work' ? <Work campaigns={content.reels} brands={content.brands} onCampaign={onCampaign} /> : <CreatorsPage creators={content.creators} onCreator={onCreator} onContact={onContact} />}</main><Footer onContact={onContact} />{campaign && <CampaignModal key={campaign.id} campaign={campaign} onClose={() => setCampaignId(null)} onContact={onContact} creator={content.creators.find(profile => profile.id === campaign.creatorId)} onCreator={onCreator} />}{creator && <CreatorModal key={creator.id} creator={creator} reels={content.reels.filter(reel => reel.creatorId === creator.id)} onClose={() => setCreatorId(null)} onContact={onContact} onCampaign={onCampaign} />}{contact && <ContactModal initialType={contact} onClose={() => setContact(null)} />}</div>;
+  return <div className={`${page}-page`}><a href="#main" className="skip-link">Skip to content</a><Nav onContact={onContact} page={page} /><main id="main">{page === 'home' ? <><Hero onContact={onContact} creators={featuredCreators} onCreator={onCreator} /><About /><Brands brands={content.brands} /><Campaigns campaigns={content.reels.filter(reel => reel.featured)} onCampaign={onCampaign} /><Creators creators={featuredCreators} onCreator={onCreator} onContact={onContact} /><Strategy /></> : page === 'work' ? <Work campaigns={content.reels} brands={content.brands} onCampaign={onCampaign} /> : page === 'about' ? <AboutPage creators={content.creators} onContact={onContact} /> : page === 'approach' ? <ApproachPage onContact={onContact} /> : <CreatorsPage creators={content.creators} onCreator={onCreator} onContact={onContact} />}</main><Footer onContact={onContact} />{campaign && <CampaignModal key={campaign.id} campaign={campaign} onClose={() => setCampaignId(null)} onContact={onContact} creator={content.creators.find(profile => profile.id === campaign.creatorId)} onCreator={onCreator} />}{creator && <CreatorModal key={creator.id} creator={creator} reels={content.reels.filter(reel => reel.creatorId === creator.id)} onClose={() => setCreatorId(null)} onContact={onContact} onCampaign={onCampaign} />}{contact && <ContactModal initialType={contact} onClose={() => setContact(null)} />}</div>;
 }
