@@ -45,19 +45,36 @@ Unsaved editor drafts are kept in this tab's session storage for up to 24 hours,
 
 Creator profiles open in accessible dialogs with their social link and related reels. Full collection pages include search and category filters. Home hero images use the first three published featured creators, in display order. Public pages read the latest saved content on each request; an open tab also refreshes on focus and every 30 seconds while visible.
 
-**Media:** JPG, PNG, WebP, and GIF images up to 10 MB; MP4 and WebM videos up to 100 MB. Upload signatures and types are checked on the server. Videos support byte-range requests for seeking. New published brands require an uploaded logo. Existing sample wordmarks stay available; upload a logo before republishing one after it has become a draft. Previously saved video links retain their existing player behavior for compatibility.
+**Media:** JPG, PNG, WebP, and GIF images up to 10 MB; MP4 and WebM videos up to 100 MB. Upload signatures and types are checked on the server. With Vercel Blob configured, files upload directly from the browser to storage; only small authorization and verification requests pass through the app. Videos stream from storage through `/api/media/` with byte-range requests for seeking. New published brands require an uploaded logo. Existing sample wordmarks stay available; upload a logo before republishing one after it has become a draft. Previously saved video links retain their existing player behavior for compatibility.
 
 ## Storage and deployment
 
-Content is written atomically to **`.data/content.json`**, with uploaded media in **`.data/media/`**. Initial sample content remains available until the first save. Revision checks prevent an older editor session from overwriting newer content; filesystem locks coordinate writes on the same volume and recover abandoned locks.
+### Vercel
 
-Run this version on a **Node.js server with persistent writable disk**. Set `VIVID_DATA_DIR` to an absolute mounted data directory when deploying, and back up that directory. Supply the secrets through your host's environment and serve production over HTTPS. If a reverse proxy changes the internal origin, set `VIVID_SITE_ORIGIN` to the exact public origin, such as `https://your-domain.com`.
+1. Open your Vercel project, choose **Storage → Create Database → Blob**, and create a **Private** Blob store. Connect it to the project. Use a separate store for Preview deployments if previews should not edit production content.
+2. Ensure the connected store's **`BLOB_STORE_ID`** is available to the Production deployment. The app uses Vercel's runtime **OIDC authentication** and issues a short-lived signed URL for each direct upload. The optional legacy **`BLOB_READ_WRITE_TOKEN`** is also supported. Keep credentials server-only; never use a `NEXT_PUBLIC_` prefix. A Public store will not work with this configuration.
+3. Set **`VIVID_ADMIN_PASSWORD`** (at least 12 characters) and **`VIVID_SESSION_SECRET`** (at least 32 random characters) in the project's environment variables. Keep your existing values if studio sign-in already works.
+4. Redeploy the updated code. Sign in at `/studio`, upload an image larger than 4.5 MB and an MP4/WebM video, save, and check the public pages. Reload the studio to check that saved content remains available.
 
-Ephemeral serverless disks and separate server instances do not share this store. Those deployments require a shared database and object storage before deployment. Runtime data and environment files are excluded from build tracing.
+Vercel Functions reject request bodies above **4.5 MB** before this application's upload handler can run. Increasing a Next.js Server Actions body limit does not change that limit. [Direct Blob uploads](https://vercel.com/docs/vercel-blob/client-upload) bypass it while retaining the 10 MB image and 100 MB video limits.
+
+The private store holds **`vivid/content.json`** and **`vivid/media/`**. Content reads bypass the Blob cache; conditional writes use ETags alongside content revisions to reject conflicting saves across server instances. Draft content stays private, and public pages receive only published records through the app. Media is exposed through the existing `/api/media/` routes without exposing the storage token. No local disk is needed on Vercel. Without a connected store, public sample content still renders, but studio saves and uploads report a storage configuration error.
+
+For local Blob access, connect the store to Development, enable OIDC for the project's Development environment, and use `vercel env pull` followed by `vercel dev`. The SDK resolves and refreshes OIDC automatically. Vercel does not download sensitive Production secrets, so configure local studio credentials separately if your password and session secret are marked sensitive.
+
+Initial sample content is used until the first save in an empty store. Existing local `.data` records and uploads are not copied automatically when switching storage providers; keep a backup and transfer them before relying on a new store. Back up stored content and media independently of deployments.
+
+### Persistent Node.js server
+
+Without `BLOB_STORE_ID` or `BLOB_READ_WRITE_TOKEN`, content is written atomically to **`.data/content.json`**, with uploaded media in **`.data/media/`**. Revision checks prevent an older editor session from overwriting newer content; filesystem locks coordinate writes on the same volume and recover abandoned locks.
+
+Use a **Node.js server with persistent writable disk** for this local storage mode. Set `VIVID_DATA_DIR` to an absolute mounted data directory when deploying, and back up that directory. Supply the secrets through your host's environment and serve production over HTTPS. If a reverse proxy changes the internal origin, set `VIVID_SITE_ORIGIN` to the exact public origin, such as `https://your-domain.com`. The reverse proxy must allow request bodies of at least 101 MB for 100 MB videos plus multipart overhead (for example, nginx `client_max_body_size 110m;`).
+
+Runtime data and environment files are excluded from build tracing. Ephemeral serverless disks and separate server instances do not share the local store; use the Blob configuration for those deployments.
 
 ## Verification
 
-`npm test` checks actual backend validation, public draft filtering, signed sessions, origin checks, persistence, conflicting saves, stale locks, media signatures, and ranges. It also checks the admin's network failure handling, upload progress confirmation, mobile file types, and local draft recovery.
+`npm test` checks actual backend validation, public draft filtering, signed sessions, origin checks, persistence, conflicting saves, stale locks, media signatures, and ranges. Blob tests use controlled storage responses to check direct upload authorization, size limits, signature verification, streamed video ranges, private content, fresh reads, and conditional save conflicts. Browser tests check direct file transfer above Vercel's request limit, upload progress confirmation, mobile file types, network failures, and local draft recovery.
 
 `scripts/test-cms.mjs` adds HTTP integration checks against a separate local production server. It requires a loopback `BASE_URL` (default port 3100) and `VIVID_DATA_DIR` ending in `verification`; use that same isolated directory for both the server and the test command. It temporarily changes test content, restores the original records, and leaves uploads in the test volume. Never point it at the live store. See the script's opening instructions.
 

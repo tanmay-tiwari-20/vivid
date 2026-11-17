@@ -17,6 +17,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 assert.equal(path.basename(process.env.VIVID_DATA_DIR || ''), 'verification', 'Use an isolated VIVID_DATA_DIR ending in verification.');
 assert.ok(process.env.VIVID_ADMIN_PASSWORD, 'VIVID_ADMIN_PASSWORD is required.');
 assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname), 'These mutation checks must target a local test server.');
+assert.ok(!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL, 'This filesystem integration suite requires local storage, without Blob or Vercel environment variables.');
 const verificationDirectory = path.resolve(process.env.VIVID_DATA_DIR);
 const contentFile = path.join(verificationDirectory, 'content.json');
 const originalFile = await readFile(contentFile).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
@@ -71,6 +72,7 @@ async function signIn() {
   assert.match(setCookie, /;\s*Secure/i, 'Run this suite against a production server.');
   cookie = setCookie.split(';')[0];
   assert.equal((await response.json()).authenticated, true);
+  assert.equal((await json('/api/admin/upload')).mode, 'local', 'The test server must use isolated local storage; never mutate a connected Blob store with this suite.');
 }
 
 async function save(next) {
@@ -101,7 +103,10 @@ async function visibleCards(endpoint, label) {
   assert.equal(response.status, 200, `${endpoint} must render.`);
   const html = await response.text();
   const pattern = new RegExp(`aria-label="${label} ([^"]+)"`, 'g');
-  return { html, labels: [...html.matchAll(pattern)].map(match => match[1]) };
+  // Collection checks exclude the additional hero previews on these pages.
+  const cardClass = endpoint === '/work' ? 'work-project-image' : endpoint === '/creators' ? 'creators-profile-portrait' : null;
+  const buttons = (html.match(/<button\b[^>]*>/g) || []).filter(tag => !cardClass || tag.includes(`class="${cardClass}"`));
+  return { html, labels: buttons.flatMap(tag => [...tag.matchAll(pattern)].map(match => match[1])) };
 }
 
 try {

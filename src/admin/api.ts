@@ -73,8 +73,14 @@ export function mediaFile(file: File, video: boolean): File {
   return file.type === mime ? file : new File([file], file.name, { type: mime, lastModified: file.lastModified });
 }
 
-export function uploadMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
-  if (offline()) return Promise.reject(new ApiError('You’re offline. Reconnect before uploading. Your edits are still here.', 0));
+function confirmedUpload(data: { url?: unknown } | null): { url: string } {
+  if (typeof data?.url !== 'string' || !data.url.startsWith('/api/media/')) {
+    throw new ApiError('The upload confirmation could not be read. Your edits are safe; choose the file again.', 502, true);
+  }
+  return { url: data.url };
+}
+
+function uploadLocalMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', '/api/admin/upload');
@@ -93,12 +99,16 @@ export function uploadMedia(file: File, onProgress: (percentage: number) => void
     xhr.onload = () => {
       const data = xhr.response as { url?: unknown; error?: unknown } | null;
       if (xhr.status < 200 || xhr.status >= 300) {
-        settle(new ApiError(typeof data?.error === 'string' ? data.error : 'The upload failed. Choose the file and try again.', xhr.status));
-      } else if (typeof data?.url !== 'string' || !data.url.startsWith('/api/media/')) {
-        settle(new ApiError('The upload confirmation could not be read. Your edits are safe; choose the file again.', 502, true));
+        const fallback = xhr.status === 413
+          ? 'The hosting server rejected this file because of its upload limit. Configure direct storage uploads, then try again.'
+          : 'The upload failed. Choose the file and try again.';
+        settle(new ApiError(typeof data?.error === 'string' ? data.error : fallback, xhr.status));
       } else {
-        onProgress(100);
-        settle(undefined, { url: data.url });
+        try {
+          const value = confirmedUpload(data);
+          onProgress(100);
+          settle(undefined, value);
+        } catch (error) { settle(error as ApiError); }
       }
     };
     xhr.onerror = () => settle(new ApiError('The upload was interrupted. Check your connection, then choose the file again. Your edits are still here.', 0, true));
@@ -106,7 +116,98 @@ export function uploadMedia(file: File, onProgress: (percentage: number) => void
     xhr.ontimeout = () => settle(new ApiError('The upload timed out. Try a smaller file or a stronger connection. Your edits are still here.', 408, true));
     const body = new FormData();
     body.append('file', file);
-    onProgress(0);
     xhr.send(body);
   });
+}
+
+function signedUploadUrl(data: { uploadUrl?: unknown } | null): string {
+  try {
+    if (typeof data?.uploadUrl !== 'string') throw new Error();
+    const url = new URL(data.uploadUrl);
+    const trustedEndpoint = url.hostname === 'vercel.com' && url.pathname === '/api/blob/';
+    if (url.protocol !== 'https:' || !trustedEndpoint || url.username || url.password || (url.port && url.port !== '443')) throw new Error();
+    return url.href;
+  } catch { throw new ApiError('The upload could not be authorized. Choose the file and try again.', 502); }
+}
+
+function transferBlob(file: File, uploadUrl: string, signal: AbortSignal, onProgress: (percentage: number) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    let settled = false;
+    const settle = (error?: ApiError) => {
+      if (settled) return;
+      settled = true;
+      xhr.onload = xhr.onerror = xhr.onabort = xhr.ontimeout = null;
+      xhr.upload.onprogress = null;
+      signal.removeEventListener('abort', cancel);
+      if (error) reject(error);
+      else resolve();
+    };
+    const cancel = () => {
+      xhr.abort();
+      settle(new ApiError('The upload was cancelled. Choose the file again when you’re ready.', 0, true));
+    };
+    xhr.open('PUT', uploadUrl);
+    xhr.withCredentials = false;
+    xhr.timeout = UPLOAD_TIMEOUT;
+    xhr.setRequestHeader('Content-Type', file.type);
+    xhr.upload.onprogress = event => {
+      if (event.lengthComputable && event.total) onProgress(Math.max(0, Math.min(99, Math.floor(event.loaded / event.total * 100))));
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) settle();
+      else settle(new ApiError(xhr.status === 413
+        ? 'This file exceeds the storage upload size limit. Choose a smaller file.'
+        : 'The storage upload failed. Choose the file and try again.', xhr.status));
+    };
+    xhr.onerror = () => settle(new ApiError('The upload was interrupted. Check your connection, then choose the file again. Your edits are still here.', 0, true));
+    xhr.onabort = () => settle(new ApiError('The upload was cancelled. Choose the file again when you’re ready.', 0, true));
+    xhr.ontimeout = () => settle(new ApiError('The upload timed out. Try a smaller file or a stronger connection. Your edits are still here.', 408, true));
+    signal.addEventListener('abort', cancel, { once: true });
+    if (signal.aborted) { cancel(); return; }
+    try { xhr.send(file); }
+    catch { settle(new ApiError('The upload could not be sent. Check your connection, then choose the file again.', 0, true)); }
+  });
+}
+
+async function uploadBlobMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
+  const extension = Object.entries(extensionTypes).find(([, mime]) => mime === file.type)?.[0];
+  if (!extension) throw new ApiError('Choose a supported image or video file.', 400);
+  const filename = `${crypto.randomUUID()}.${extension}`;
+  const controller = new AbortController();
+  let timedOut = false;
+  let sendingFile = false;
+  const timer = setTimeout(() => { timedOut = true; controller.abort(); }, UPLOAD_TIMEOUT);
+  try {
+    // Exchange only metadata with Next.js. The signed URL grants access to
+    // this upload alone, and all file bytes go directly to Blob storage.
+    const authorization = await request<{ uploadUrl?: unknown }>('/api/admin/upload', {
+      method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'vivid.upload-authorize', filename }),
+    });
+    const uploadUrl = signedUploadUrl(authorization);
+    sendingFile = true;
+    await transferBlob(file, uploadUrl, controller.signal, onProgress);
+    const data = await request<{ url?: unknown }>('/api/admin/upload', {
+      method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'vivid.upload-complete', filename }),
+    });
+    const value = confirmedUpload(data);
+    if (value.url !== `/api/media/${filename}`) throw new ApiError('The upload confirmation did not match this file. Choose the file again.', 502, true);
+    onProgress(100);
+    return value;
+  } catch (error) {
+    if (timedOut) throw new ApiError('The upload timed out. Try a smaller file or a stronger connection. Your edits are still here.', 408, sendingFile);
+    if (error instanceof ApiError) throw error;
+    throw new ApiError('The upload was interrupted. Check your connection, then choose the file again. Your edits are still here.', 0, sendingFile);
+  } finally { clearTimeout(timer); }
+}
+
+export async function uploadMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
+  if (offline()) throw new ApiError('You’re offline. Reconnect before uploading. Your edits are still here.', 0);
+  onProgress(0);
+  const settings = await request<{ mode?: unknown }>('/api/admin/upload');
+  if (settings?.mode === 'blob') return uploadBlobMedia(file, onProgress);
+  if (settings?.mode === 'local') return uploadLocalMedia(file, onProgress);
+  throw new ApiError('The upload configuration could not be read. Reload the studio and try again.', 502);
 }

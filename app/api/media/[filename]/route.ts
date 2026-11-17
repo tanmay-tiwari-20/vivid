@@ -4,6 +4,8 @@ import { Readable } from 'node:stream';
 import path from 'node:path';
 import { mediaDirectory } from '../../../../src/lib/content';
 import { byteRange, MEDIA_TYPES } from '../../../../src/lib/media';
+import { blobStorageEnabled } from '../../../../src/lib/blob-storage';
+import { serveBlobMedia } from '../../../../src/lib/blob-media';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,6 +16,7 @@ async function serve(request: Request, context: Context, head = false): Promise<
   const { filename } = await context.params;
   const match = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp|gif|mp4|webm)$/.exec(filename);
   if (!match) return new Response('Not found', { status: 404 });
+  if (blobStorageEnabled()) return serveBlobMedia(request, filename, head);
   const target = path.join(mediaDirectory(), filename);
   let size: number;
   try {

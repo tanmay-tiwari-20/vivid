@@ -8,19 +8,20 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/content-backend.mjs tests/admin-reliability.mjs",
+    "test": "node --test tests/content-backend.mjs tests/admin-reliability.mjs tests/blob-storage.mjs tests/blob-upload.mjs",
     "test:cms": "node --env-file=.env.local scripts/test-cms.mjs"
   },
   "dependencies": {
+    "@vercel/blob": "^2.9.0",
+    "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "lucide-react": "^0.468.0"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.0",
     "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0"
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.7.0"
   }
 }

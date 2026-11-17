@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 import { createRequire } from 'node:module';
+import { webcrypto } from 'node:crypto';
 import ts from 'typescript';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -19,30 +20,35 @@ function compiled(relative) {
 
 // Test actual browser helpers with controlled transport, timers and storage.
 // Media controls below render the actual components with React's server renderer.
-function apiHarness({ online = true, fetchImpl } = {}) {
+function apiHarness({ online = true, fetchImpl, mode = 'local' } = {}) {
   let nextTimer = 0;
   const timers = new Map();
   const requests = [];
   const xhrs = [];
+  let xhrCreated;
+  const nextXHR = new Promise(resolve => { xhrCreated = resolve; });
   class FakeXHR {
-    constructor() { this.upload = {}; this.status = 0; this.response = null; xhrs.push(this); }
+    constructor() { this.upload = {}; this.status = 0; this.response = null; this.headers = {}; this.abortCalls = 0; this.sendCalls = 0; xhrs.push(this); xhrCreated(this); }
     open(method, url) { this.method = method; this.url = url; }
-    send(body) { this.body = body; }
+    setRequestHeader(name, value) { this.headers[name] = value; }
+    send(body) { this.body = body; this.sendCalls++; }
+    abort() { this.abortCalls++; this.onabort?.(); }
+    fail() { this.onerror?.(); }
     progress(loaded, total) { this.upload.onprogress?.({ lengthComputable: true, loaded, total }); }
     complete(status, response) { this.status = status; this.response = response; this.onload?.(); }
   }
   const context = {
-    exports: {}, File, FormData, AbortController, XMLHttpRequest: FakeXHR,
+    exports: {}, File, FormData, AbortController, XMLHttpRequest: FakeXHR, crypto: webcrypto, URL,
     navigator: { onLine: online },
     setTimeout: (callback, duration) => { const id = ++nextTimer; timers.set(id, { callback, duration }); return id; },
     clearTimeout: id => timers.delete(id),
     fetch: async (url, init) => {
       requests.push({ url, init });
-      return fetchImpl ? fetchImpl(url, init) : { ok: true, status: 200, json: async () => ({ saved: true }) };
+      return fetchImpl ? fetchImpl(url, init) : response(200, url === '/api/admin/upload' ? { mode } : { saved: true });
     },
   };
   vm.runInNewContext(compiled('src/admin/api.ts'), context, { filename: 'src/admin/api.ts' });
-  return { api: context.exports, context, requests, timers, xhrs };
+  return { api: context.exports, context, requests, timers, xhrs, nextXHR };
 }
 
 function response(status, data) {
@@ -116,12 +122,12 @@ test('mobile files with omitted MIME types are normalized while unsupported or m
   assert.throws(() => api.mediaFile(new File([new Uint8Array(10 * 1024 * 1024 + 1)], 'too-large.jpg'), false), error => error.status === 413);
 });
 
-test('upload progress reaches completion only after a valid response and rejects expired sessions', async () => {
+test('local upload progress reaches completion only after a valid response and rejects expired sessions', async () => {
   const harness = apiHarness();
   const progress = [];
   const file = new File(['video'], 'story.mp4', { type: 'video/mp4' });
   const pending = harness.api.uploadMedia(file, value => progress.push(value));
-  const xhr = harness.xhrs[0];
+  const xhr = await harness.nextXHR;
   assert.equal(xhr.method, 'POST');
   assert.equal(xhr.url, '/api/admin/upload');
   assert.equal(xhr.timeout, 5 * 60_000);
@@ -137,14 +143,180 @@ test('upload progress reaches completion only after a valid response and rejects
   const expired = apiHarness();
   const rejected = expired.api.uploadMedia(file, () => {});
   const check = assert.rejects(rejected, error => error instanceof expired.api.ApiError && error.status === 401 && error.message === 'Session ended.');
-  expired.xhrs[0].complete(401, { error: 'Session ended.' });
+  (await expired.nextXHR).complete(401, { error: 'Session ended.' });
   await check;
 
   const malformed = apiHarness();
   const incomplete = malformed.api.uploadMedia(file, () => {});
   const malformedCheck = assert.rejects(incomplete, error => error.status === 502 && error.outcomeUnknown);
-  malformed.xhrs[0].complete(201, {});
+  (await malformed.nextXHR).complete(201, {});
   await malformedCheck;
+});
+
+const signedBlobURL = 'https://vercel.com/api/blob/?pathname=vivid%2Fmedia%2Ffile.mp4&signature=upload-only';
+
+function blobFetch({ authorizationStatus = 200, authorizationData = { uploadUrl: signedBlobURL }, complete } = {}) {
+  return async (_url, init) => {
+    if (!init.method || init.method === 'GET') return response(200, { mode: 'blob' });
+    const data = JSON.parse(init.body);
+    if (data.type === 'vivid.upload-authorize') return response(authorizationStatus, authorizationData);
+    assert.equal(data.type, 'vivid.upload-complete');
+    return complete ? complete(data) : response(201, { url: `/api/media/${data.filename}` });
+  };
+}
+
+test('files above Vercel request limits use signed raw Blob PUT and progress waits for signature confirmation', async () => {
+  let completeUpload;
+  let finalizationStarted;
+  const finalizing = new Promise(resolve => { finalizationStarted = resolve; });
+  const harness = apiHarness({
+    fetchImpl: blobFetch({ complete: data => new Promise(resolve => {
+      completeUpload = () => resolve(response(201, { url: `/api/media/${data.filename}` }));
+      finalizationStarted();
+    }) }),
+  });
+  const file = new File([new Uint8Array(6 * 1024 * 1024)], 'large-video.mp4', { type: 'video/mp4' });
+  const progress = [];
+  const pending = harness.api.uploadMedia(file, value => progress.push(value));
+  const xhr = await harness.nextXHR;
+  assert.equal(xhr.method, 'PUT');
+  assert.equal(xhr.url, signedBlobURL);
+  assert.equal(xhr.body, file, 'raw file bytes go only to the signed storage URL');
+  assert.equal(xhr.withCredentials, false, 'the storage request carries no studio credentials');
+  assert.equal(xhr.headers['Content-Type'], 'video/mp4');
+  assert.equal(xhr.timeout, 5 * 60_000);
+  xhr.progress(50, 100);
+  xhr.progress(100, 100);
+  assert.deepEqual(progress, [0, 50, 99]);
+  assert.equal(harness.requests.length, 2, 'only configuration and authorization reach Next.js before the transfer finishes');
+  xhr.complete(200, null);
+  await finalizing;
+  assert.deepEqual(progress, [0, 50, 99], 'PUT success cannot confirm file contents by itself');
+  assert.equal(harness.requests.length, 3);
+  assert.equal(harness.xhrs.length, 1, 'file bytes never use the Next.js multipart endpoint');
+  for (const { init } of harness.requests.filter(item => item.init.method === 'POST')) {
+    assert.equal(init.headers['Content-Type'], 'application/json');
+    assert.ok(init.body.length < 1024, 'Next.js receives metadata rather than file bytes');
+  }
+  const authorization = JSON.parse(harness.requests[1].init.body);
+  const confirmation = JSON.parse(harness.requests[2].init.body);
+  assert.match(authorization.filename, /^[0-9a-f-]{36}\.mp4$/);
+  assert.equal(confirmation.filename, authorization.filename);
+  completeUpload();
+  assert.equal((await pending).url, `/api/media/${authorization.filename}`);
+  assert.equal(progress.at(-1), 100);
+  assert.equal(harness.timers.size, 0);
+  assert.equal(xhr.upload.onprogress, null);
+  assert.equal(xhr.onload, null);
+  assert.equal(xhr.onabort, null);
+  assert.equal(xhr.abortCalls, 0);
+});
+
+test('direct uploads retain auth and configuration errors without falling back to oversized multipart requests', async () => {
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  const missing = apiHarness({ fetchImpl: async () => response(503, { error: 'Connect a private Blob store first.' }) });
+  await assert.rejects(missing.api.uploadMedia(file, () => {}), error => error.status === 503 && /private Blob/.test(error.message));
+  assert.equal(missing.xhrs.length, 0);
+  assert.equal(missing.requests.length, 1);
+
+  const expired = apiHarness({ fetchImpl: blobFetch({ authorizationStatus: 401, authorizationData: { error: 'Your studio session has ended.' } }) });
+  await assert.rejects(expired.api.uploadMedia(file, () => {}), error => error.status === 401 && /session has ended/.test(error.message) && !error.outcomeUnknown);
+  assert.equal(expired.xhrs.length, 0);
+  assert.equal(expired.requests.length, 2);
+  assert.equal(expired.timers.size, 0);
+});
+
+test('malformed or untrusted signed authorization URLs cannot receive file bytes', async () => {
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  for (const uploadUrl of [undefined, 123, 'not a URL', 'http://vercel.com/api/blob/', 'https://evil.example/', 'https://vercel.com/otherpath', 'https://vercel.com/api/blob', 'https://vercel.com.evil.example/api/blob/', 'https://vercel.com@evil.example/api/blob/', 'https://user:secret@vercel.com/api/blob/', 'https://vercel.com:8443/api/blob/', 'https://blob.vercel-storage.com/']) {
+    const harness = apiHarness({ fetchImpl: blobFetch({ authorizationData: { uploadUrl } }) });
+    await assert.rejects(harness.api.uploadMedia(file, () => {}), error => error.status === 502 && !error.outcomeUnknown);
+    assert.equal(harness.xhrs.length, 0);
+    assert.equal(harness.requests.length, 2);
+    assert.equal(harness.timers.size, 0);
+  }
+});
+
+test('failed Blob transfers are never finalized and completion errors never show 100 percent', async () => {
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  for (const fail of [xhr => xhr.fail(), xhr => xhr.complete(413, null), xhr => xhr.complete(403, null)]) {
+    const harness = apiHarness({ fetchImpl: blobFetch() });
+    const progress = [];
+    const pending = harness.api.uploadMedia(file, value => progress.push(value));
+    const rejected = assert.rejects(pending);
+    const xhr = await harness.nextXHR;
+    fail(xhr);
+    await rejected;
+    assert.equal(harness.requests.length, 2);
+    assert.equal(xhr.sendCalls, 1, 'the upload is not automatically retried');
+    assert.ok(!progress.includes(100));
+    assert.equal(harness.timers.size, 0);
+    assert.equal(xhr.upload.onprogress, null);
+    assert.equal(xhr.onload, null);
+  }
+  for (const complete of [() => response(400, { error: 'The file contents must match its type.' }), () => response(201, {}), () => response(201, { url: '/api/media/another.png' })]) {
+    const harness = apiHarness({ fetchImpl: blobFetch({ complete }) });
+    const progress = [];
+    const pending = harness.api.uploadMedia(file, value => progress.push(value));
+    const rejected = assert.rejects(pending);
+    (await harness.nextXHR).complete(200, null);
+    await rejected;
+    assert.equal(harness.requests.length, 3);
+    assert.ok(!progress.includes(100));
+    assert.equal(harness.timers.size, 0);
+  }
+});
+
+test('direct upload timeout aborts the transfer and clears timers without finalizing', async () => {
+  const harness = apiHarness({ fetchImpl: blobFetch() });
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  const pending = harness.api.uploadMedia(file, () => {});
+  const rejected = assert.rejects(pending, error => error.status === 408 && error.outcomeUnknown && /timed out/.test(error.message));
+  const xhr = await harness.nextXHR;
+  const timer = [...harness.timers.values()].find(value => value.duration === 5 * 60_000);
+  assert.ok(timer);
+  timer.callback();
+  await rejected;
+  assert.equal(xhr.abortCalls, 1);
+  assert.equal(harness.requests.length, 2);
+  assert.equal(harness.timers.size, 0);
+  assert.equal(xhr.upload.onprogress, null);
+  assert.equal(xhr.onabort, null);
+});
+
+test('the direct upload deadline also covers authorization and finalization without leaving transfer abort listeners', async () => {
+  for (const phase of ['vivid.upload-authorize', 'vivid.upload-complete']) {
+    let phaseStarted;
+    const started = new Promise(resolve => { phaseStarted = resolve; });
+    const normalFetch = blobFetch();
+    const harness = apiHarness({ fetchImpl: async (url, init) => {
+      if (init.method === 'POST' && JSON.parse(init.body).type === phase) {
+        return new Promise((_resolve, reject) => {
+          init.signal.addEventListener('abort', () => reject(new Error('Aborted')), { once: true });
+          phaseStarted();
+        });
+      }
+      return normalFetch(url, init);
+    } });
+    const pending = harness.api.uploadMedia(new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' }), () => {});
+    const rejected = assert.rejects(pending, error => error.status === 408 && error.outcomeUnknown === (phase === 'vivid.upload-complete'));
+    if (phase === 'vivid.upload-complete') (await harness.nextXHR).complete(200, null);
+    await started;
+    [...harness.timers.values()].find(value => value.duration === 5 * 60_000).callback();
+    await rejected;
+    assert.equal(harness.requests.at(-1).init.signal.aborted, true);
+    assert.equal(harness.timers.size, 0);
+    if (phase === 'vivid.upload-authorize') assert.equal(harness.xhrs.length, 0);
+    else assert.equal(harness.xhrs[0].abortCalls, 0, 'a completed PUT has detached the shared signal listener');
+  }
+});
+
+test('a plain hosting 413 gives a direct-storage recovery message', async () => {
+  const harness = apiHarness();
+  const pending = harness.api.uploadMedia(new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' }), () => {});
+  const rejected = assert.rejects(pending, error => error.status === 413 && /direct storage/.test(error.message));
+  (await harness.nextXHR).complete(413, null);
+  await rejected;
 });
 
 function draftHarness() {
