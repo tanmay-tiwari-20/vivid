@@ -149,11 +149,18 @@ try {
 
   await check('Empty collections render without errors', async () => {
     await save({ revision: working.revision, reels: [], creators: [], brands: [] });
-    for (const endpoint of ['/', '/work', '/creators']) {
+    // for (const endpoint of ['/', '/work', '/creators']) {
+    for (const endpoint of ['/', '/work']) {
       const response = await request(endpoint, { auth: false });
       assert.equal(response.status, 200);
       assert.match(await response.text(), /on (?:their|its) way/);
     }
+  });
+
+  await check('The temporarily disabled creators page returns 404', async () => {
+    const response = await request('/creators', { auth: false });
+    assert.equal(response.status, 404);
+    assert.ok(!/aria-label="Meet [^"]+"/.test(await response.text()), 'The disabled route must not render creator profiles.');
   });
 
   const names = [`${tag} Featured Creator`, `${tag} Work Creator`, `${tag} Draft Creator`];
@@ -185,14 +192,18 @@ try {
     const homeReels = await visibleCards('/', 'Watch');
     assert.deepEqual(homeReels.labels, [titles[0]]);
     const homeCreators = await visibleCards('/', 'Meet');
-    assert.ok(homeCreators.labels.includes(names[0]));
-    assert.ok(!homeCreators.labels.includes(names[1]));
+    // Creator profile cards are temporarily disabled; keep their original visibility checks.
+    // assert.ok(homeCreators.labels.includes(names[0]));
+    // assert.ok(!homeCreators.labels.includes(names[1]));
+    assert.deepEqual(homeCreators.labels, [], 'Home must not expose creator profile cards.');
     const work = await visibleCards('/work', 'Watch');
     assert.deepEqual(work.labels, titles.slice(0, 2));
-    const creators = await visibleCards('/creators', 'Meet');
-    assert.deepEqual(creators.labels, names.slice(0, 2));
-    for (const html of [homeReels.html, homeCreators.html, work.html, creators.html]) {
+    // const creators = await visibleCards('/creators', 'Meet');
+    // assert.deepEqual(creators.labels, names.slice(0, 2));
+    // for (const html of [homeReels.html, homeCreators.html, work.html, creators.html]) {
+    for (const html of [homeReels.html, homeCreators.html, work.html]) {
       assert.ok(!html.includes(names[2]) && !html.includes(titles[2]) && !html.includes(brandNames[2]), 'Drafts must not leak into page HTML or serialized props.');
+      assert.ok(!/<a\b[^>]*\bhref="\/creators"/.test(html), 'Public navigation must not link to the disabled creators page.');
     }
     for (const html of [homeReels.html, work.html]) for (const name of brandNames.slice(0, 2)) assert.ok(html.includes(name), 'Published brands must appear on home and work pages.');
   });
@@ -229,7 +240,7 @@ try {
     assert.equal((await json('/api/admin/content')).revision, working.revision);
   });
 
-  await check('Creator edits, ordering, and featured toggles propagate', async () => {
+  await check('Creator data persists while public profiles stay disabled', async () => {
     const next = clone(working);
     next.creators[0].name = `${names[0]} Updated`;
     const replacement = await upload(await readFile(path.join(root, 'public/images/vivid-logo-preview.png')), 'image/png', 'replacement.png');
@@ -254,8 +265,9 @@ try {
     assert.equal(publicData.creators.find(item => item.id === `creator-${ids[0]}`).bio, 'Updated biography.');
     assert.deepEqual((await visibleCards('/', 'Watch')).labels, [titles[1]]);
     const featuredNames = (await visibleCards('/', 'Meet')).labels;
-    assert.ok(featuredNames.includes(names[1]));
-    assert.ok(!featuredNames.includes(`${names[0]} Updated`));
+    // assert.ok(featuredNames.includes(names[1]));
+    // assert.ok(!featuredNames.includes(`${names[0]} Updated`));
+    assert.deepEqual(featuredNames, [], 'Creator data edits must not restore the disabled profile cards.');
     assert.deepEqual((await visibleCards('/work', 'Watch')).labels, [titles[1], titles[0]]);
   });
 

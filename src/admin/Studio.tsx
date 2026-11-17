@@ -158,6 +158,8 @@ function ContentEditor({ editor, creators, brands, saving, onSave, onClose, onDr
   const isReel = draft.kind === 'reel';
   const isBrand = draft.kind === 'brand';
   const kindName = isReel ? 'reel' : isBrand ? 'brand' : 'creator';
+  // Creator editing is temporarily disabled; keep the draft and data types for restoration.
+  if (draft.kind === 'creator') return null;
   if (confirmClose) return <Dialog title="Discard changes?" onClose={() => setConfirmClose(false)}><div className="studio-confirm"><span className="studio-confirm-icon"><Pencil size={25} /></span><h2>Discard your changes?</h2><p>This {kindName} has unsaved edits.</p><div><button className="studio-secondary" onClick={() => setConfirmClose(false)}>Keep editing</button><button className="studio-danger" onClick={onClose}>Discard changes</button></div></div></Dialog>;
   return <Dialog title={`${editor.isNew ? 'Add' : 'Edit'} ${kindName}`} onClose={close} wide locked={blocked}>
     <div className="studio-editor-top"><h2>{editor.isNew ? 'Add' : 'Edit'} {kindName}</h2><p>{isReel ? 'Upload your media and choose where it appears.' : isBrand ? 'Add a logo and details for home, work, and the marquee.' : 'Update the profile and choose where it appears.'}</p></div>
@@ -168,8 +170,10 @@ function ContentEditor({ editor, creators, brands, saving, onSave, onClose, onDr
           <label>Reel title<input required value={draft.value.title} onChange={event => update('title', event.target.value)} maxLength={180} placeholder="A story worth stopping for" /></label>
           <label>Brand profile<select value={draft.value.brandId} onChange={event => { const brand = brands.find(item => item.id === event.target.value); setDraft(previous => previous.kind === 'reel' ? { ...previous, value: { ...previous.value, brandId: brand?.id || '', brand: brand?.name || previous.value.brand } } : previous); }}><option value="">Enter a brand name</option>{brands.map(brand => <option key={brand.id} value={brand.id}>{brand.name}{!brand.published ? ' (draft)' : ''}</option>)}</select></label>
           <div className="studio-form-row">{!draft.value.brandId && <label>Brand name<input value={draft.value.brand} onChange={event => update('brand', event.target.value)} maxLength={100} placeholder="Brand name" /></label>}<label>Category<input value={draft.value.category} onChange={event => update('category', event.target.value)} maxLength={100} placeholder="e.g. Fashion & lifestyle" /></label></div>
+          {/* Creator fields temporarily disabled. Existing reel associations are preserved.
           <label>Creator profile<select value={draft.value.creatorId} onChange={event => { const creator = creators.find(item => item.id === event.target.value); setDraft(previous => previous.kind === 'reel' ? { ...previous, value: { ...previous.value, creatorId: creator?.id || '', creator: creator?.name || previous.value.creator } } : previous); }}><option value="">Enter a creator name</option>{creators.map(creator => <option key={creator.id} value={creator.id}>{creator.name}{!creator.published ? ' (draft)' : ''}</option>)}</select></label>
           {!draft.value.creatorId && <label>Creator name<input value={draft.value.creator} onChange={event => update('creator', event.target.value)} maxLength={100} placeholder="Who brought this story to life?" /></label>}
+          */}
           <label>Description <span className="studio-optional">optional</span><textarea value={draft.value.description} onChange={event => update('description', event.target.value)} maxLength={3000} rows={3} placeholder="A little about the reel" /></label>
           </section><section className="studio-form-section"><div className="studio-form-section-heading"><h3>Media</h3></div>
           <MediaField label="Cover image" value={draft.value.image} onChange={next => update('image', next)} onBusy={setUploading} disabled={saving} required={value.published} onSessionExpired={onSessionExpired} />
@@ -184,6 +188,8 @@ function ContentEditor({ editor, creators, brands, saving, onSave, onClose, onDr
             <MediaField label="Brand logo" value={draft.value.logo} onChange={next => update('logo', next)} onBusy={setUploading} disabled={saving} required={value.published} onSessionExpired={onSessionExpired} logo />
             <label>Brand website URL <span className="studio-optional">optional</span><input type="url" value={draft.value.websiteUrl} onChange={event => update('websiteUrl', event.target.value)} maxLength={2000} placeholder="https://brand.com" autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label>
           </section>
+        </> : null}
+        {/* Creator profile form temporarily disabled.
         </> : <>
           <section className="studio-form-section"><div className="studio-form-section-heading"><h3>Profile</h3></div>
           <label>Creator name<input required value={draft.value.name} onChange={event => update('name', event.target.value)} maxLength={100} placeholder="The name behind the content" /></label>
@@ -195,8 +201,11 @@ function ContentEditor({ editor, creators, brands, saving, onSave, onClose, onDr
           <label>Social profile URL <span className="studio-optional">optional</span><input type="url" value={draft.value.profileUrl} onChange={event => update('profileUrl', event.target.value)} maxLength={2000} placeholder="https://instagram.com/…" autoCapitalize="none" autoCorrect="off" spellCheck={false} /></label>
           </section><details className="studio-more-options"><summary>Follower count <span>optional</span></summary><label>Followers<input value={draft.value.followers} onChange={event => update('followers', event.target.value)} maxLength={30} placeholder="e.g. 120K" /></label></details>
         </>}
+        */}
         <section className="studio-form-section"><div className="studio-form-section-heading"><h3>Visibility</h3></div><div className="studio-settings"><label className="studio-check"><input type="checkbox" role="switch" checked={value.published} onChange={event => update('published', event.target.checked)} /><span><strong>Published</strong><small>{value.published ? isBrand ? 'Visible on home, work, and the home marquee.' : `Visible on the ${isReel ? 'work' : 'creators'} page.` : 'Draft. Hidden from the website.'}</small></span></label>{draft.kind !== 'brand' && <label className="studio-check"><input type="checkbox" role="switch" checked={draft.value.featured} onChange={event => update('featured', event.target.checked)} /><span><strong>Featured on home</strong><small>{value.published ? 'Also show on the home page.' : 'Appears on home after publishing.'}</small></span></label>}</div></section>
+        {/* Sample disclosure controls are paused; existing record flags are preserved.
         <details className="studio-more-options"><summary>Sample content disclosure</summary><label className="studio-check"><input type="checkbox" checked={value.demo} onChange={event => update('demo', event.target.checked)} /><span><strong>Mark as sample content</strong><small>Label illustrative profiles, media, and figures.</small></span></label></details>
+        */}
       </fieldset></div></div></div>
       <div className="studio-editor-footer">{error ? <p className="studio-field-error" role="alert">{saveError || error}</p> : <span>{dirty ? 'Unsaved edits kept in this tab' : editor.isNew ? 'Ready when you are' : 'No unsaved changes'}</span>}<div><button type="button" className="studio-secondary" onClick={close} disabled={blocked}>Cancel</button><button type="submit" className="studio-primary" disabled={blocked}>{saving || uploading ? <LoaderCircle size={18} className="studio-spin" /> : <Check size={18} />}{saving ? 'Saving…' : uploading ? 'Uploading…' : 'Save changes'}</button></div></div>
     </form>
@@ -227,7 +236,9 @@ export default function Studio() {
   }, [editor]);
   useEffect(() => {
     const recovered = recoveredDraft();
-    if (recovered) { retainedEditor.current = recovered; setEditor(recovered); }
+    // if (recovered) { retainedEditor.current = recovered; setEditor(recovered); }
+    // Skip saved creator drafts while creator management is disabled.
+    if (recovered && recovered.kind !== 'creator') { retainedEditor.current = recovered; setEditor(recovered); }
     const update = () => setOnline(navigator.onLine);
     update(); window.addEventListener('online', update); window.addEventListener('offline', update);
     return () => { window.removeEventListener('online', update); window.removeEventListener('offline', update); };
@@ -312,7 +323,7 @@ export default function Studio() {
     } finally { savingRef.current = false; setSaving(false); }
   };
   const saveEditor = async (draft: Editor) => {
-    if (!content) return false;
+    if (!content || draft.kind === 'creator') return false;
     setEditor(draft);
     const list = draft.kind === 'reel' ? content.reels : draft.kind === 'brand' ? content.brands : content.creators;
     if (!draft.isNew && !list.some(item => item.id === draft.value.id)) {
@@ -322,7 +333,8 @@ export default function Studio() {
     const next = { ...content };
     if (draft.kind === 'reel') next.reels = content.reels.some(item => item.id === draft.value.id) ? content.reels.map(item => item.id === draft.value.id ? draft.value : item) : [...content.reels, draft.value];
     else if (draft.kind === 'brand') next.brands = content.brands.some(item => item.id === draft.value.id) ? content.brands.map(item => item.id === draft.value.id ? draft.value : item) : [...content.brands, draft.value];
-    else next.creators = content.creators.some(item => item.id === draft.value.id) ? content.creators.map(item => item.id === draft.value.id ? draft.value : item) : [...content.creators, draft.value];
+    // Creator saving temporarily disabled.
+    // else next.creators = content.creators.some(item => item.id === draft.value.id) ? content.creators.map(item => item.id === draft.value.id ? draft.value : item) : [...content.creators, draft.value];
     const success = await persist(next, `${draft.kind === 'reel' ? 'Reel' : draft.kind === 'brand' ? 'Brand' : 'Creator'} saved${draft.value.published ? '. Your website is up to date.' : ' as a draft.'}`);
     if (success) closeEditor();
     return success;
@@ -331,7 +343,8 @@ export default function Studio() {
     const id = crypto.randomUUID();
     if (section === 'reels') setEditor({ kind: 'reel', isNew: true, value: { id, title: '', brand: '', brandId: '', creator: '', creatorId: '', category: '', description: '', image: '', video: '', views: '', reach: '', color: '#e6f8f2', featured: false, published: true, demo: false } });
     else if (section === 'brands') setEditor({ kind: 'brand', isNew: true, value: { id, name: '', category: '', description: '', logo: '', websiteUrl: '', published: true, demo: false } });
-    else setEditor({ kind: 'creator', isNew: true, value: { id, name: '', category: '', specialty: '', bio: '', image: '', profileUrl: '', handle: '', followers: '', featured: false, published: true, demo: false } });
+    // Creator creation temporarily disabled.
+    // else setEditor({ kind: 'creator', isNew: true, value: { id, name: '', category: '', specialty: '', bio: '', image: '', profileUrl: '', handle: '', followers: '', featured: false, published: true, demo: false } });
   };
   const toggle = (id: string, key: 'featured' | 'published') => {
     if (!content) return;
@@ -347,14 +360,15 @@ export default function Studio() {
     void persist({ ...content, [section]: list }, 'Display order updated.');
   };
   const remove = async () => {
-    if (!deleting || !content) return;
+    if (!deleting || !content || deleting.section === 'creators') return;
     const next = { ...content, [deleting.section]: content[deleting.section].filter(item => item.id !== deleting.id) };
-    if (deleting.section === 'creators') next.reels = next.reels.map(reel => reel.creatorId === deleting.id ? { ...reel, creatorId: '' } : reel);
+    // if (deleting.section === 'creators') next.reels = next.reels.map(reel => reel.creatorId === deleting.id ? { ...reel, creatorId: '' } : reel);
     if (deleting.section === 'brands') next.reels = next.reels.map(reel => reel.brandId === deleting.id ? { ...reel, brandId: '' } : reel);
     if (await persist(next, `${deleting.section === 'reels' ? 'Reel' : deleting.section === 'brands' ? 'Brand' : 'Creator'} removed.`)) setDeleting(null);
   };
   const visible = content?.[section].filter(item => {
-    const text = 'title' in item ? `${item.title} ${item.brand} ${item.creator} ${item.category}` : 'logo' in item ? `${item.name} ${item.category} ${item.description}` : `${item.name} ${item.category} ${item.handle}`;
+    // const text = 'title' in item ? `${item.title} ${item.brand} ${item.creator} ${item.category}` : 'logo' in item ? `${item.name} ${item.category} ${item.description}` : `${item.name} ${item.category} ${item.handle}`;
+    const text = 'title' in item ? `${item.title} ${item.brand} ${item.category}` : 'logo' in item ? `${item.name} ${item.category} ${item.description}` : '';
     return text.toLowerCase().includes(query.toLowerCase()) && (filter === 'all' || filter === 'featured' && 'featured' in item && item.featured || filter === 'published' && item.published || filter === 'draft' && !item.published);
   }) || [];
   const sectionName = section === 'reels' ? 'Reels' : section === 'brands' ? 'Brands' : 'Creators';
@@ -364,7 +378,9 @@ export default function Studio() {
   if (!session || session.authenticated && !content) return <div className="studio-loading"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} />{loadError ? <><p role="alert">{loadError}</p><button className="studio-primary" onClick={() => void load()}>Try again</button></> : <><LoaderCircle size={25} className="studio-spin" /><p>Opening your studio…</p></>}</div>;
   if (!session.authenticated) return <div className="studio-login"><main className="studio-login-main">
     <a className="studio-brand" href="/" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} /></a>
-    <div className="studio-login-box"><span className="studio-lock"><LockKeyhole size={24} /></span><h1>Sign in to your studio</h1><p>Manage your reels, creators, and brands.</p>
+    <div className="studio-login-box"><span className="studio-lock"><LockKeyhole size={24} /></span><h1>Sign in to your studio</h1>
+      {/* <p>Manage your reels, creators, and brands.</p> */}
+      <p>Manage your reels and brands.</p>
       {session.configured ? <form onSubmit={login}><label>Admin password<input type="password" name="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required placeholder="Enter your password" disabled={loggingIn} /></label><button type="submit" className="studio-primary" disabled={loggingIn}>{loggingIn ? <LoaderCircle size={18} className="studio-spin" /> : <ArrowUpRight size={18} />}{loggingIn ? 'Signing in…' : 'Sign in'}</button></form> : <div className="studio-setup"><h3>Set up studio access</h3><p>Add <code>VIVID_ADMIN_PASSWORD</code> (12+ characters) and <code>VIVID_SESSION_SECRET</code> (32+ characters) to <code>.env.local</code>, then restart the server.</p><button className="studio-secondary" onClick={() => void load()}>Check again</button></div>}
       {editor && <p className="studio-recovery-note">Your unsaved edits will reopen after sign-in.</p>}
       <span className="studio-login-note"><ShieldCheck size={15} /> Private admin access</span>
@@ -375,14 +391,21 @@ export default function Studio() {
     <header className="studio-header"><div className="studio-header-inner"><a className="studio-brand" href="/"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} /><span>Studio</span></a><div className="studio-header-actions"><a className="studio-secondary" href="/" target="_blank" rel="noopener noreferrer">View site <ExternalLink size={16} /></a><button className="studio-icon" aria-label="Sign out" title="Sign out" onClick={() => void logout()} disabled={saving}><LogOut size={19} /></button></div></div></header>
     <main className="studio-main"><div className="studio-main-content"><div className="studio-page-heading"><h1>Content studio</h1><p>Keep your website up to date.</p></div>
       {!online && <div className="studio-offline" role="status"><WifiOff size={18} /><span>You’re offline. Reconnect to save or upload. Your edits are kept in this tab.</span></div>}
+      {/* Creators tab temporarily disabled.
       <nav className="studio-tabs" aria-label="Content type">{(['reels', 'creators', 'brands'] as const).map(value => <button key={value} className={section === value ? 'active' : ''} aria-pressed={section === value} onClick={() => { setSection(value); setQuery(''); setFilter('all'); }}>{value === 'reels' ? <Clapperboard size={18} /> : value === 'brands' ? <Building2 size={18} /> : <Users size={18} />}{value === 'reels' ? 'Reels' : value === 'brands' ? 'Brands' : 'Creators'}<span>{content![value].length}</span></button>)}</nav>
+      */}
+      <nav className="studio-tabs" aria-label="Content type">{(['reels', 'brands'] as const).map(value => <button key={value} className={section === value ? 'active' : ''} aria-pressed={section === value} onClick={() => { setSection(value); setQuery(''); setFilter('all'); }}>{value === 'reels' ? <Clapperboard size={18} /> : <Building2 size={18} />}{value === 'reels' ? 'Reels' : 'Brands'}<span>{content![value].length}</span></button>)}</nav>
       <div className="studio-content-heading"><div><h2>{sectionName}</h2><p>{content![section].filter(item => item.published).length} published{section === 'brands' ? ' · Home, work & marquee' : ` · ${content![section].filter(item => item.published && 'featured' in item && item.featured).length} featured on home`}</p></div><button className="studio-primary" onClick={add} disabled={saving}><Plus size={18} />Add {itemName}</button></div>
-      <div className="studio-toolbar"><label className="studio-search"><Search size={17} /><input aria-label={`Search ${section}`} placeholder={`Search ${section === 'reels' ? 'reels, brands, creators…' : section === 'brands' ? 'brands, categories…' : 'creators, categories…'}`} value={query} onChange={event => setQuery(event.target.value)} /></label><div className="studio-filters" role="group" aria-label="Filter content">{[['all', 'All'], ...(section === 'brands' ? [] : [['featured', 'Featured']]), ['published', 'Published'], ['draft', 'Drafts']].map(([key, label]) => <button key={key} className={filter === key ? 'active' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>)}</div></div>
+      <div className="studio-toolbar"><label className="studio-search"><Search size={17} /><input aria-label={`Search ${section}`} placeholder={
+        // `Search ${section === 'reels' ? 'reels, brands, creators…' : section === 'brands' ? 'brands, categories…' : 'creators, categories…'}`
+        `Search ${section === 'reels' ? 'reels, brands, categories…' : 'brands, categories…'}`
+      } value={query} onChange={event => setQuery(event.target.value)} /></label><div className="studio-filters" role="group" aria-label="Filter content">{[['all', 'All'], ...(section === 'brands' ? [] : [['featured', 'Featured']]), ['published', 'Published'], ['draft', 'Drafts']].map(([key, label]) => <button key={key} className={filter === key ? 'active' : ''} aria-pressed={filter === key} onClick={() => setFilter(key)}>{label}</button>)}</div></div>
       {visible.length ? <div className={`studio-content-grid studio-grid-${section}`}>{visible.map(item => {
         const reel = 'title' in item;
         const brand = 'logo' in item;
         const name = reel ? item.title : item.name;
-        const subtitle = reel ? item.creator && `with ${item.creator}` : brand ? item.description : item.handle || item.specialty;
+        // const subtitle = reel ? item.creator && `with ${item.creator}` : brand ? item.description : item.handle || item.specialty;
+        const subtitle = brand ? item.description : '';
         const edit: Editor = reel ? { kind: 'reel', value: item, isNew: false } : brand ? { kind: 'brand', value: item, isNew: false } : { kind: 'creator', value: item, isNew: false };
         const index = content![section].findIndex(value => value.id === item.id);
         return <article className="studio-content-card" key={item.id}>

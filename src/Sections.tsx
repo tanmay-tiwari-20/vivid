@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { ArrowUpRight, AudioLines, Asterisk, ChartNoAxesCombined, ChevronDown, Pause, Play, UsersRound } from 'lucide-react';
 import Link from 'next/link';
-import type { Brand, Creator } from './lib/content-types';
-import { ContentFilters, EmptyContent } from './ContentBrowser';
+import type { Brand /* , Creator */ } from './lib/content-types';
+// import { ContentFilters, EmptyContent } from './ContentBrowser';
 
 export type ContactType = 'brand' | 'creator';
 
@@ -68,7 +68,9 @@ export function Brands({ brands, fullPage = false }: { brands: Brand[]; fullPage
             {[0, 1].map(copy => <div className="vmw-brands-set" key={copy} aria-hidden={copy === 1 ? true : undefined}>{marqueeBrands.map((brand, index) => <span className="vmw-brand-marquee-item" key={`${copy}-${index}-${brand.id}`} aria-hidden={index >= publishedBrands.length ? true : undefined}><BrandMark brand={brand} /></span>)}</div>)}
           </div>
         </div>
-        <div className="container vmw-brands-bottom"><p>{publishedBrands.some(brand => brand.demo) ? 'Illustrative brand lineup · Demo concept' : 'Distinct brands. Shared creative ambition.'}</p><button className="vmw-marquee-control" onClick={() => setPaused(value => !value)} aria-pressed={paused} aria-label={paused ? 'Resume brand marquee' : 'Pause brand marquee'}>{paused ? <Play size={13} fill="currentColor" /> : <Pause size={13} fill="currentColor" />}<span>{paused ? 'Resume' : 'Pause'}</span></button></div>
+        <div className="container vmw-brands-bottom">
+          {/* <p>{publishedBrands.some(brand => brand.demo) ? 'Illustrative brand lineup · Demo concept' : 'Distinct brands. Shared creative ambition.'}</p> */}
+          <p>Distinct brands. Shared creative ambition.</p><button className="vmw-marquee-control" onClick={() => setPaused(value => !value)} aria-pressed={paused} aria-label={paused ? 'Resume brand marquee' : 'Pause brand marquee'}>{paused ? <Play size={13} fill="currentColor" /> : <Pause size={13} fill="currentColor" />}<span>{paused ? 'Resume' : 'Pause'}</span></button></div>
       </>}
       <div className="container vmw-brand-directory">
         <div className="vmw-brand-directory-heading">
@@ -87,6 +89,7 @@ export function Brands({ brands, fullPage = false }: { brands: Brand[]; fullPage
   );
 }
 
+/* Creators are temporarily disabled. Keep this section available for restoration.
 export function Creators({ onContact, creators, onCreator, fullPage = false }: ContactProps & { creators: Creator[]; onCreator: (creator: Creator) => void; fullPage?: boolean }) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('All');
@@ -115,6 +118,8 @@ export function Creators({ onContact, creators, onCreator, fullPage = false }: C
     </section>
   );
 }
+
+*/
 
 const strategySteps = [
   { title: 'First, we get you.', text: 'Your brand. Your people. Your next big goal. We ask the right questions and listen closely, so every creative decision starts with a clear understanding of what matters.' },
@@ -147,7 +152,7 @@ export function Footer({ onContact }: ContactProps) {
   return (
     <footer id="contact" className="vmw-footer">
       <div className="vmw-footer-cta"><div className="container"><div className="vmw-footer-cta-top"><span>GOT A BIG IDEA? WE’RE ALL EARS.</span><Asterisk size={29} strokeWidth={1.5}/></div><div className="vmw-footer-cta-main"><h2>Let’s make<br/>some noise.</h2><button onClick={() => onContact('brand')} className="vmw-footer-contact" aria-label="Start a conversation with Vivid Media Works"><ArrowUpRight strokeWidth={1.1}/><span>LET’S TALK</span></button></div><div className="vmw-footer-cta-bottom"><p>Good things start with a conversation.</p><span>YOUR NEXT CHAPTER, IN VIVID.</span></div></div></div>
-      <div className="container vmw-footer-bottom"><Link href="/" className="vmw-footer-logo" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98"/></Link><nav aria-label="Footer navigation"><Link href="/about">About</Link><Link href="/work">Our work</Link><Link href="/creators">Creators</Link><Link href="/approach">Our approach</Link><button onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={14}/></button></nav></div>
+      <div className="container vmw-footer-bottom"><Link href="/" className="vmw-footer-logo" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98"/></Link><nav aria-label="Footer navigation"><Link href="/about">About</Link><Link href="/work">Our work</Link>{/* Creators are temporarily disabled: <Link href="/creators">Creators</Link> */}<Link href="/approach">Our approach</Link><button onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={14}/></button></nav></div>
       <div className="container vmw-footer-fineprint"><p>© {new Date().getFullYear()} Vivid Media Works.</p><p>Made to connect. Built to stand out.</p><a href="#main" aria-label="Back to top">BACK TO TOP <ArrowUpRight size={13}/></a></div>
     </footer>
   );

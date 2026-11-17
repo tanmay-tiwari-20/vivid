@@ -88,6 +88,40 @@ test('Vercel without a Blob store keeps public seed available and blocks studio 
   assert.doesNotThrow(() => local.config.requireStorageConfiguration());
 });
 
+test('explicit local storage remains usable with pulled Blob credentials', () => {
+  for (const credentials of [
+    { BLOB_STORE_ID: 'store_development' },
+    { BLOB_STORE_ID: 'store_development', VERCEL_OIDC_TOKEN: 'expired-development-token' },
+    { BLOB_READ_WRITE_TOKEN: 'stale-server-token' },
+  ]) {
+    const h = harness({ environment: { VIVID_STORAGE_MODE: 'local', ...credentials } });
+    assert.equal(h.config.blobStorageEnabled(), false);
+    assert.doesNotThrow(() => h.config.requireStorageConfiguration());
+  }
+});
+
+test('Vercel ignores a local override and keeps configured content in Blob', async () => {
+  for (const credentials of [{ BLOB_READ_WRITE_TOKEN: token }, { BLOB_STORE_ID: 'store_deployed' }]) {
+    const h = harness({ environment: { VERCEL: '1', VIVID_STORAGE_MODE: 'local', ...credentials } });
+    assert.equal(h.config.blobStorageEnabled(), true);
+    const content = await h.store.readContent();
+    content.reels[0].title = 'Saved in deployed Blob';
+    await h.store.saveContent(content);
+    assert.equal((await h.store.readContent()).reels[0].title, 'Saved in deployed Blob');
+    assert.equal(h.calls.put.length, 1);
+    assert.deepEqual(h.calls.disk, []);
+  }
+});
+
+test('a local override cannot enable ephemeral writes on Vercel without Blob', async () => {
+  const h = harness({ environment: { VERCEL: '1', VIVID_STORAGE_MODE: 'local' } });
+  assert.deepEqual(structuredClone(await h.store.readContent()), structuredClone(h.initial));
+  await assert.rejects(h.store.saveContent(h.initial), error => error.status === 503);
+  assert.deepEqual(h.calls.disk, []);
+  assert.deepEqual(h.calls.get, []);
+  assert.deepEqual(h.calls.put, []);
+});
+
 test('OIDC storage forwards only the store ID so the SDK can refresh authentication', async () => {
   const storeId = 'store_test-oidc';
   for (const environment of [

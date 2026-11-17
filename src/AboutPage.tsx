@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+// import { useState } from 'react'; // Creator portraits are temporarily disabled.
 import Link from 'next/link';
 import { ArrowDown, ArrowUpRight, Asterisk, AudioLines, Compass, HeartHandshake, Plus, Sparkles, UsersRound } from 'lucide-react';
-import type { Creator } from './lib/content-types';
+// import type { Creator } from './lib/content-types';
 import type { ContactType } from './Sections';
 import styles from './about.module.css';
 
@@ -20,6 +20,7 @@ const approach = [
   { title: 'Learn. Refine. Go again.', label: 'REPORTING & INSIGHT', text: 'We review how the content performed against the goals we agreed on. From audience response to engagement and reach, we turn the results into useful direction for what comes next.' },
 ];
 
+/* Creator portraits are temporarily disabled.
 function CreatorImage({ creator, index }: { creator: Creator; index: number }) {
   const [failedSource, setFailedSource] = useState('');
   return <Link href="/creators" className={styles.portrait} aria-label={creator.demo ? `Explore the creator collective: ${creator.category.toLowerCase() || 'creative perspectives'}` : `Explore the creator collective, including ${creator.name}`}>
@@ -29,8 +30,11 @@ function CreatorImage({ creator, index }: { creator: Creator; index: number }) {
   </Link>;
 }
 
-export default function AboutPage({ creators, onContact }: { creators: Creator[]; onContact: (type: ContactType) => void }) {
-  const portraits = [...creators.filter(creator => creator.featured), ...creators.filter(creator => !creator.featured)].filter(creator => creator.image).slice(0, 2);
+*/
+
+// export default function AboutPage({ creators, onContact }: { creators: Creator[]; onContact: (type: ContactType) => void }) {
+export default function AboutPage({ onContact }: { onContact: (type: ContactType) => void }) {
+  // const portraits = [...creators.filter(creator => creator.featured), ...creators.filter(creator => !creator.featured)].filter(creator => creator.image).slice(0, 2);
 
   return <>
     <section className={styles.hero} aria-labelledby="about-title">
@@ -44,16 +48,19 @@ export default function AboutPage({ creators, onContact }: { creators: Creator[]
             <ul className={styles.heroTraits} aria-label="The Vivid mindset"><li><Compass size={16} strokeWidth={1.5} aria-hidden="true" />Independent minds</li><li><HeartHandshake size={16} strokeWidth={1.5} aria-hidden="true" />People first</li><li><Sparkles size={16} strokeWidth={1.5} aria-hidden="true" />Culture curious</li></ul>
           </div>
           <div className={styles.heroVisual}>
-            <div className={styles.collage} data-portraits={portraits.length}>
+            <div className={styles.collage} data-portraits={0 /* portraits.length */}>
               <div className={styles.visualTopline}><span>THE ART OF COMING TOGETHER</span></div>
               <div className={styles.creativeStamp} aria-hidden="true"><svg viewBox="0 0 100 100"><path d="M50 0 58 32 85 15 68 42 100 50 68 58 85 85 58 68 50 100 42 68 15 85 32 58 0 50 32 42 15 15 42 32Z" fill="currentColor" /></svg><span><span>A GOOD KIND<br />OF <strong>DIFFERENT.</strong></span></span></div>
               <div className={styles.portraitStrip}>
+                {/* Creator portraits are temporarily disabled:
                 {portraits.length ? portraits.map((creator, index) => <CreatorImage creator={creator} index={index} key={creator.id} />) : <div className={styles.visualPlaceholder}><UsersRound size={64} strokeWidth={1} aria-hidden="true" /><span>Different voices.<br />Endless possibility.</span></div>}
+                */}
+                <div className={styles.visualPlaceholder}><UsersRound size={64} strokeWidth={1} aria-hidden="true" /><span>Different voices.<br />Endless possibility.</span></div>
               </div>
               <div className={styles.connectionNote}><span><HeartHandshake size={18} strokeWidth={1.5} aria-hidden="true" /></span>Better, together.</div>
               <div className={styles.visualManifesto}><span>OUR KIND OF INFLUENCE</span><p>Human connection.<br /><em>Creative possibility.</em></p><div><span>BRANDS <Plus size={10} aria-hidden="true" /> CREATORS <Plus size={10} aria-hidden="true" /> CULTURE</span><img src="/images/vivid-mark.svg" alt="" width="32" height="32" /></div></div>
             </div>
-            <div className={styles.visualFootnote}><span>DIFFERENT VOICES. ONE VIVID VISION.</span>{portraits.some(creator => creator.demo) && <span>Illustrative stock portraits.</span>}</div>
+            <div className={styles.visualFootnote}><span>DIFFERENT VOICES. ONE VIVID VISION.</span>{/* {portraits.some(creator => creator.demo) && <span>Illustrative stock portraits.</span>} */}</div>
           </div>
         </div>
         <div className={styles.heroBottom}><span><span className={styles.statusDot} /> BASED IN INDIA. THINKING EVERYWHERE.</span><a href="#our-story">MORE THAN A NAME. A MINDSET. <ArrowDown size={14} aria-hidden="true" /></a></div>
@@ -77,9 +84,11 @@ export default function AboutPage({ creators, onContact }: { creators: Creator[]
       <div className={styles.steps}>{approach.map((step, index) => <details className={styles.step} key={step.title} open={index === 0}><summary><span className={styles.stepNumber}>0{index + 1}</span><h3>{step.title}</h3><span className={styles.stepToggle}><Plus size={18} strokeWidth={1.5} aria-hidden="true" /></span></summary><div className={styles.stepContent}><span>{step.label}</span><p>{step.text}</p></div></details>)}</div>
     </section>
 
-    <section className={styles.invitation} aria-labelledby="invitation-title"><div className="container"><div className={styles.invitationHeading}><span className={styles.kicker}><span /> THERE’S ROOM FOR YOUR KIND OF VIVID</span><h2 id="invitation-title">Great things happen<br /><em>in good company.</em></h2><p>Whether you have a brand to grow or a story to tell,<br />we’d love to find out what we can make together.</p></div><div className={styles.invitationGrid}>
+    <section className={styles.invitation} aria-labelledby="invitation-title"><div className="container"><div className={styles.invitationHeading}><span className={styles.kicker}><span /> THERE’S ROOM FOR YOUR KIND OF VIVID</span><h2 id="invitation-title">Great things happen<br /><em>in good company.</em></h2><p>Whether you have a brand to grow or a story to tell,<br />we’d love to find out what we can make together.</p></div><div className={styles.invitationGrid} style={{ gridTemplateColumns: 'minmax(0, 1fr)' }}>
       <article className={styles.brandInvitation}><div className={styles.invitationTop}><span>FOR BRANDS</span><ArrowUpRight size={27} strokeWidth={1.3} aria-hidden="true" /></div><h3>Your ambition.<br />Our creative energy.</h3><p>Let’s find the right voices, shape a meaningful story, and build a campaign around what matters to your brand.</p><button className={styles.invitationButton} onClick={() => onContact('brand')}>Bring us your brief <ArrowUpRight size={18} aria-hidden="true" /></button></article>
+      {/* Creator invitations are temporarily disabled:
       <article className={styles.creatorInvitation}><div className={styles.invitationTop}><span>FOR CREATORS</span><Asterisk size={27} strokeWidth={1.3} aria-hidden="true" /></div><h3>Your voice.<br />A world of possibility.</h3><p>You bring the perspective. We bring a collaborative approach to finding partnerships that feel like you.</p><button className={styles.invitationButton} onClick={() => onContact('creator')}>Let’s create together <ArrowUpRight size={18} aria-hidden="true" /></button></article>
+      */}
     </div></div></section>
   </>;
 }

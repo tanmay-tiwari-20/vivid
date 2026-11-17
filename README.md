@@ -62,6 +62,8 @@ The private store holds **`vivid/content.json`** and **`vivid/media/`**. Content
 
 For local Blob access, connect the store to Development, enable OIDC for the project's Development environment, and use `vercel env pull` followed by `vercel dev`. The SDK resolves and refreshes OIDC automatically. Vercel does not download sensitive Production secrets, so configure local studio credentials separately if your password and session secret are marked sensitive.
 
+If a local content read reports `403 Forbidden`, OIDC may be disabled for Development. To work with saved local content instead, set `VIVID_STORAGE_MODE=local` in `.env.local` and restart `npm run dev`. This uses `.data/content.json` and `.data/media/` (or `VIVID_DATA_DIR`) while keeping any pulled Blob credentials available for later. Remove that setting to resume Blob access after enabling Development OIDC. Vercel deployments ignore the local override and continue to require shared storage.
+
 Initial sample content is used until the first save in an empty store. Existing local `.data` records and uploads are not copied automatically when switching storage providers; keep a backup and transfer them before relying on a new store. Back up stored content and media independently of deployments.
 
 ### Persistent Node.js server

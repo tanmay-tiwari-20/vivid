@@ -27,6 +27,6 @@ export default function ReelPlayer({ reel }: { reel: Reel }) {
   const provider = videoProvider(reel.video);
   return <div className="modal-video-wrap">
     {provider.embed ? <iframe src={provider.embed} title={reel.title} allow="fullscreen; picture-in-picture; encrypted-media" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" /> : provider.external || failed ? <div className="reel-external"><img src={reel.image} alt={reel.title} /><div><span className="external-play"><Play size={28} fill="currentColor" /></span><p>{failed ? 'Open the original reel to keep watching.' : `Watch the full story on ${provider.external}.`}</p><a className="button button-lime" href={reel.video} target="_blank" rel="noopener noreferrer">{provider.external ? `Watch on ${provider.external}` : 'Open original reel'}<ArrowUpRight size={18} /></a></div></div> : <video key={reel.video} src={reel.video} poster={reel.image} controls playsInline autoPlay muted loop preload="metadata" onError={() => setFailed(true)} aria-label={reel.title} />}
-    {reel.demo && <span className="video-stock-label">SAMPLE FOOTAGE</span>}
+    {/* {reel.demo && <span className="video-stock-label">SAMPLE FOOTAGE</span>} */}
   </div>;
 }

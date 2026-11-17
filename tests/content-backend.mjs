@@ -122,6 +122,39 @@ test('persistent saves survive fresh module instances and serialize revision con
   } finally { await fs.rm(directory, { recursive: true, force: true }); }
 });
 
+test('explicit local storage reads and saves existing records without contacting connected Blob', async () => {
+  await withUploadStore(async ({ store, directory, image }) => {
+    const existing = await store.readContent();
+    existing.reels[0].title = 'Saved before Blob was connected';
+    await store.saveContent(existing);
+
+    const blobCalls = [];
+    const blob = { ...require('@vercel/blob') };
+    for (const method of ['get', 'put', 'head']) blob[method] = async () => {
+      blobCalls.push(method);
+      throw new Error('Local storage must not contact Blob.');
+    };
+    const environment = {
+      VIVID_STORAGE_MODE: 'local', VIVID_DATA_DIR: directory,
+      BLOB_STORE_ID: 'store_development', VERCEL_OIDC_TOKEN: 'expired-development-token',
+      BLOB_READ_WRITE_TOKEN: 'stale-server-token',
+    };
+    const overrides = { '@vercel/blob': blob };
+    const local = loadBackend(environment, overrides)('content.ts');
+    const content = await local.readContent();
+    assert.equal(content.reels[0].title, 'Saved before Blob was connected');
+    content.reels[0].title = 'Updated in local storage';
+    content.reels[0].image = image;
+    const saved = await local.saveContent(content);
+    const restarted = loadBackend(environment, overrides)('content.ts');
+    assert.deepEqual(structuredClone(await restarted.readContent()), structuredClone(saved));
+    const persisted = JSON.parse(await fs.readFile(path.join(directory, 'content.json'), 'utf8'));
+    assert.equal(persisted.reels[0].title, 'Updated in local storage');
+    assert.equal(persisted.reels[0].image, image);
+    assert.deepEqual(blobCalls, []);
+  });
+});
+
 test('new records and media replacements accept existing uploads while profile links and empty drafts remain supported', async () => {
   await withUploadStore(async ({ store, image, video }) => {
     const next = await store.readContent();

@@ -35,6 +35,6 @@ export default function WorkBrands({ brands, campaigns, onCampaign }: WorkBrands
   return <section className="work-brands" id="brands" aria-labelledby="work-brands-heading"><div className="container">
     <div className="work-brands-heading"><div><span className="work-brands-kicker"><span /> THE BRAND LINEUP</span><h2 id="work-brands-heading">Good brands.<br /><em>Great company.</em></h2></div><div className="work-brands-intro"><Sparkles size={26} strokeWidth={1.3} aria-hidden="true" /><p>Different worlds. Shared creative energy. Bringing brands and creators together to make something worth connecting with.</p></div></div>
     <div className="work-brands-grid" data-count={publishedBrands.length}>{publishedBrands.map((brand, index) => <BrandCard key={brand.id} brand={brand} index={index} campaign={campaigns.find(campaign => campaign.published && campaign.brandId === brand.id)} onCampaign={onCampaign} />)}</div>
-    <div className="work-brands-footnote"><span><span /> DIFFERENT NAMES. ONE VIVID POINT OF VIEW.</span>{publishedBrands.some(brand => brand.demo) && <p>A sample brand lineup. Brand associations are illustrative.</p>}</div>
+    <div className="work-brands-footnote"><span><span /> DIFFERENT NAMES. ONE VIVID POINT OF VIEW.</span>{/* {publishedBrands.some(brand => brand.demo) && <p>A sample brand lineup. Brand associations are illustrative.</p>} */}</div>
   </div></section>;
 }

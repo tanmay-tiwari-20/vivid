@@ -10,8 +10,10 @@ import '../src/home-brands.css';
 import '../src/work.css';
 import '../src/work-hero.css';
 import '../src/work-brands.css';
-import '../src/creators.css';
-import '../src/creators-hero.css';
+// Creators are temporarily disabled; retain their styles for later.
+// import '../src/creators.css';
+// import '../src/creators-hero.css';
+import '../src/hero-reels.css';
 
 const manrope = localFont({
   src: '../public/fonts/manrope-variable.woff2',

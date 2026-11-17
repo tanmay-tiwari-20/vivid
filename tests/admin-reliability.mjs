@@ -445,7 +445,8 @@ test('image and video media controls offer file upload without a media URL input
   }
 });
 
-test('creator social profile links remain editable while media inputs stay upload-only', () => {
+// test('creator social profile links remain editable while media inputs stay upload-only', () => {
+test('creator editing is temporarily disabled while reel media stays upload-only', () => {
   const { ContentEditor } = renderedEditorHarness();
   const noop = () => {};
   const creator = editorFixture('creator');
@@ -454,11 +455,14 @@ test('creator social profile links remain editable while media inputs stay uploa
     onDraftChange: noop, onSessionExpired: noop, onErrorClear: noop,
   };
   const creatorMarkup = renderToStaticMarkup(React.createElement(ContentEditor, { ...props, editor: creator }));
-  const profileInputs = inputElements(creatorMarkup).filter(input => /type="url"/.test(input));
-  assert.equal(profileInputs.length, 1);
-  assert.match(profileInputs[0], /value="https:\/\/instagram\.com\/creator"/);
-  assert.equal(inputElements(creatorMarkup).filter(input => /type="file"/.test(input)).length, 1);
+  // Restore these assertions when creator editing is re-enabled.
+  // const profileInputs = inputElements(creatorMarkup).filter(input => /type="url"/.test(input));
+  // assert.equal(profileInputs.length, 1);
+  // assert.match(profileInputs[0], /value="https:\/\/instagram\.com\/creator"/);
+  // assert.equal(inputElements(creatorMarkup).filter(input => /type="file"/.test(input)).length, 1);
+  assert.equal(creatorMarkup, '');
   const reelMarkup = renderToStaticMarkup(React.createElement(ContentEditor, { ...props, editor: editorFixture('reel') }));
+  assert.doesNotMatch(reelMarkup, /Creator profile|Creator name/);
   assert.equal(inputElements(reelMarkup).filter(input => /type="url"/.test(input)).length, 0);
   assert.equal(inputElements(reelMarkup).filter(input => /type="file"/.test(input)).length, 2);
 });

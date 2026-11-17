@@ -1,7 +1,14 @@
 import 'server-only';
 import { ContentError } from './content-validation';
 
+function localStorageSelected(): boolean {
+  // Pulled Vercel credentials can coexist with an explicitly local workspace.
+  // Vercel deployments always require shared storage, never ephemeral disk.
+  return process.env.VIVID_STORAGE_MODE === 'local' && !process.env.VERCEL;
+}
+
 export function blobStorageEnabled(): boolean {
+  if (localStorageSelected()) return false;
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
@@ -14,6 +21,7 @@ export function blobStorageOptions(): { token?: string; storeId?: string } {
 }
 
 export function requireStorageConfiguration(): void {
+  if (localStorageSelected()) return;
   if (process.env.VERCEL && !blobStorageEnabled()) {
     throw new ContentError('Studio storage is not configured. Connect a private Vercel Blob store to this project and redeploy before saving or uploading.', 503);
   }
