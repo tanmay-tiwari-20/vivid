@@ -353,3 +353,10 @@
 @media (prefers-reduced-motion: reduce) {
   .studio-shell *, .studio-login *, .studio-dialog *, .studio-overlay, .studio-toast { animation: none !important; transition: none !important; }
 }
+
+.studio-reel-source { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.studio-source-options { display: flex; gap: 8px; }
+.studio-source-options button { flex: 1; min-height: 44px; padding: 10px 12px; border: 1px solid #d9e5df; border-radius: 8px; background: #fff; color: #50615b; font-size: 13px; font-weight: 600; }
+.studio-source-options button[aria-pressed="true"] { border-color: #127d61; background: #edf8f3; color: #12664f; }
+.studio-source-options button:disabled { opacity: .6; cursor: wait; }
+.studio-reel-link { display: inline-flex; align-items: center; align-self: start; gap: 7px; min-height: 44px; color: #12664f; font-size: 12px; font-weight: 600; }

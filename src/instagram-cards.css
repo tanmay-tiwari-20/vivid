@@ -1,0 +1,21 @@
+.work-page .is-instagram-reel .work-project-format {
+  top: 16px;
+  right: 16px;
+  padding: 8px 11px;
+  border: 1px solid #ffffff38;
+  border-radius: 999px;
+  background: #122b25a3;
+  color: #f1fff9;
+  backdrop-filter: blur(12px);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: .08em;
+}
+
+.work-page .is-instagram-reel .work-project-format svg { color: #9bf3d8; }
+
+.work-page .is-instagram-reel:focus-visible .work-project-play { color: #122b25; background: var(--lime); border-color: var(--lime); }
+
+@media (max-width: 540px) {
+  .work-page .is-instagram-reel .work-project-format { top: 14px; right: 14px; padding: 7px 9px; font-size: 7px; }
+}

@@ -6,15 +6,17 @@ import type { Brand, Reel } from './lib/content-types';
 import { EmptyContent } from './ContentBrowser';
 import WorkHero from './WorkHero';
 import WorkBrands from './WorkBrands';
+import { getInstagramReel } from './lib/instagram';
 
 type WorkProps = { campaigns: Reel[]; brands: Brand[]; onCampaign: (campaign: Reel) => void };
 
 function Project({ campaign, index, onCampaign }: { campaign: Reel; index: number; onCampaign: WorkProps['onCampaign'] }) {
+  const instagram = Boolean(getInstagramReel(campaign.video));
   return <article className="work-project">
-    <button className="work-project-image" onClick={() => onCampaign(campaign)} aria-label={`Watch ${campaign.title}`}>
+    <button className={`work-project-image${instagram ? ' is-instagram-reel' : ''}`} onClick={() => onCampaign(campaign)} aria-label={`Watch ${campaign.title}${instagram ? ' — Instagram Reel' : ''}`}>
       <img src={campaign.image} alt={campaign.title} loading="lazy" />
       <span className="work-project-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
-      <span className="work-project-format"><Instagram size={13} aria-hidden="true" /> REEL</span>
+      <span className="work-project-format"><Instagram size={13} aria-hidden="true" /> {instagram ? 'INSTAGRAM REEL' : 'REEL'}</span>
       <span className="work-project-play" aria-hidden="true"><Play size={21} fill="currentColor" /></span>
       {campaign.brand && <span className="work-project-tag">{campaign.brand}</span>}
     </button>

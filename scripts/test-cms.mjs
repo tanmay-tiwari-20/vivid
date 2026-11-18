@@ -17,7 +17,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 assert.equal(path.basename(process.env.VIVID_DATA_DIR || ''), 'verification', 'Use an isolated VIVID_DATA_DIR ending in verification.');
 assert.ok(process.env.VIVID_ADMIN_PASSWORD, 'VIVID_ADMIN_PASSWORD is required.');
 assert.ok(['127.0.0.1', 'localhost', '[::1]'].includes(base.hostname), 'These mutation checks must target a local test server.');
-assert.ok(!process.env.BLOB_READ_WRITE_TOKEN && !process.env.VERCEL, 'This filesystem integration suite requires local storage, without Blob or Vercel environment variables.');
+assert.ok(!process.env.VERCEL && (process.env.VIVID_STORAGE_MODE === 'local' || ![process.env.CLOUDINARY_URL, process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY, process.env.CLOUDINARY_API_SECRET].some(Boolean)), 'This filesystem integration suite requires isolated local storage. Set VIVID_STORAGE_MODE=local when Cloudinary credentials are present.');
 const verificationDirectory = path.resolve(process.env.VIVID_DATA_DIR);
 const contentFile = path.join(verificationDirectory, 'content.json');
 const originalFile = await readFile(contentFile).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
@@ -72,7 +72,7 @@ async function signIn() {
   assert.match(setCookie, /;\s*Secure/i, 'Run this suite against a production server.');
   cookie = setCookie.split(';')[0];
   assert.equal((await response.json()).authenticated, true);
-  assert.equal((await json('/api/admin/upload')).mode, 'local', 'The test server must use isolated local storage; never mutate a connected Blob store with this suite.');
+  assert.equal((await json('/api/admin/upload')).mode, 'local', 'The test server must use isolated local storage; never mutate a connected Cloudinary account with this suite.');
 }
 
 async function save(next) {

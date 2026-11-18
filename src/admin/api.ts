@@ -73,8 +73,8 @@ export function mediaFile(file: File, video: boolean): File {
   return file.type === mime ? file : new File([file], file.name, { type: mime, lastModified: file.lastModified });
 }
 
-function confirmedUpload(data: { url?: unknown } | null): { url: string } {
-  if (typeof data?.url !== 'string' || !data.url.startsWith('/api/media/')) {
+function confirmedUpload(data: { url?: unknown } | null, expected?: string): { url: string } {
+  if (typeof data?.url !== 'string' || (expected ? data.url !== expected : !/^\/api\/media\/[0-9a-f-]{36}\.(jpg|png|webp|gif|mp4|webm)$/.test(data.url))) {
     throw new ApiError('The upload confirmation could not be read. Your edits are safe; choose the file again.', 502, true);
   }
   return { url: data.url };
@@ -120,43 +120,63 @@ function uploadLocalMedia(file: File, onProgress: (percentage: number) => void):
   });
 }
 
-function signedUploadUrl(data: { uploadUrl?: unknown } | null): string {
+type CloudinaryAuthorization = { uploadUrl: string; fields: Record<string, string>; cloud: string; kind: string };
+
+function signedUpload(data: { uploadUrl?: unknown; fields?: unknown } | null, filename: string, video: boolean): CloudinaryAuthorization {
   try {
     if (typeof data?.uploadUrl !== 'string') throw new Error();
     const url = new URL(data.uploadUrl);
-    const trustedEndpoint = url.hostname === 'vercel.com' && url.pathname === '/api/blob/';
-    if (url.protocol !== 'https:' || !trustedEndpoint || url.username || url.password || (url.port && url.port !== '443')) throw new Error();
-    return url.href;
+    const endpoint = /^\/v1_1\/([a-zA-Z0-9_-]+)\/(image|video)\/upload$/.exec(url.pathname);
+    if (url.protocol !== 'https:' || url.hostname !== 'api.cloudinary.com' || !endpoint || endpoint[2] !== (video ? 'video' : 'image') || url.username || url.password || url.port || url.search || url.hash) throw new Error();
+    if (!data.fields || typeof data.fields !== 'object' || Array.isArray(data.fields)) throw new Error();
+    const fields = Object.fromEntries(Object.entries(data.fields).map(([key, value]) => {
+      if (!['timestamp', 'public_id', 'overwrite', 'allowed_formats', 'type', 'api_key', 'signature'].includes(key) || !['string', 'number', 'boolean'].includes(typeof value)) throw new Error();
+      return [key, String(value)];
+    }));
+    const extension = filename.split('.').pop()!;
+    const uuid = filename.slice(0, -(extension.length + 1));
+    if (!fields.public_id?.endsWith(`/media/${uuid}`) || !/^[a-zA-Z0-9_/-]+$/.test(fields.public_id) || fields.public_id.includes('..') || fields.overwrite !== 'false' || fields.type !== 'upload' || fields.allowed_formats !== extension || !fields.api_key || !/^\d+$/.test(fields.timestamp || '') || !/^[a-f0-9]{40,64}$/.test(fields.signature || '')) throw new Error();
+    return { uploadUrl: url.href, fields, cloud: endpoint[1], kind: endpoint[2] };
   } catch { throw new ApiError('The upload could not be authorized. Choose the file and try again.', 502); }
 }
 
-function transferBlob(file: File, uploadUrl: string, signal: AbortSignal, onProgress: (percentage: number) => void): Promise<void> {
+function transferCloudinary(file: File, authorization: CloudinaryAuthorization, signal: AbortSignal, onProgress: (percentage: number) => void): Promise<string> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     let settled = false;
-    const settle = (error?: ApiError) => {
+    const settle = (error?: ApiError, url?: string) => {
       if (settled) return;
       settled = true;
       xhr.onload = xhr.onerror = xhr.onabort = xhr.ontimeout = null;
       xhr.upload.onprogress = null;
       signal.removeEventListener('abort', cancel);
       if (error) reject(error);
-      else resolve();
+      else resolve(url!);
     };
     const cancel = () => {
       xhr.abort();
       settle(new ApiError('The upload was cancelled. Choose the file again when you’re ready.', 0, true));
     };
-    xhr.open('PUT', uploadUrl);
+    xhr.open('POST', authorization.uploadUrl);
+    xhr.responseType = 'json';
     xhr.withCredentials = false;
     xhr.timeout = UPLOAD_TIMEOUT;
-    xhr.setRequestHeader('Content-Type', file.type);
     xhr.upload.onprogress = event => {
       if (event.lengthComputable && event.total) onProgress(Math.max(0, Math.min(99, Math.floor(event.loaded / event.total * 100))));
     };
     xhr.onload = () => {
-      if (xhr.status >= 200 && xhr.status < 300) settle();
-      else settle(new ApiError(xhr.status === 413
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const secureUrl = xhr.response?.secure_url;
+          if (typeof secureUrl !== 'string') throw new Error();
+          const parsed = new URL(secureUrl);
+          const prefix = `/${authorization.cloud}/${authorization.kind}/upload/`;
+          if (parsed.protocol !== 'https:' || parsed.hostname !== 'res.cloudinary.com' || parsed.port || parsed.username || parsed.password || parsed.search || parsed.hash || !parsed.pathname.startsWith(prefix)) throw new Error();
+          const remainder = parsed.pathname.slice(prefix.length);
+          if (!new RegExp(`^v[1-9][0-9]*/${authorization.fields.public_id}\\.${authorization.fields.allowed_formats}$`).test(remainder)) throw new Error();
+          settle(undefined, secureUrl);
+        } catch { settle(new ApiError('Cloudinary did not confirm this upload. Your edits are safe; choose the file again.', 502, true)); }
+      } else settle(new ApiError(xhr.status === 413
         ? 'This file exceeds the storage upload size limit. Choose a smaller file.'
         : 'The storage upload failed. Choose the file and try again.', xhr.status));
     };
@@ -165,12 +185,15 @@ function transferBlob(file: File, uploadUrl: string, signal: AbortSignal, onProg
     xhr.ontimeout = () => settle(new ApiError('The upload timed out. Try a smaller file or a stronger connection. Your edits are still here.', 408, true));
     signal.addEventListener('abort', cancel, { once: true });
     if (signal.aborted) { cancel(); return; }
-    try { xhr.send(file); }
+    const body = new FormData();
+    for (const [key, value] of Object.entries(authorization.fields)) body.append(key, value);
+    body.append('file', file);
+    try { xhr.send(body); }
     catch { settle(new ApiError('The upload could not be sent. Check your connection, then choose the file again.', 0, true)); }
   });
 }
 
-async function uploadBlobMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
+async function uploadCloudinaryMedia(file: File, onProgress: (percentage: number) => void): Promise<{ url: string }> {
   const extension = Object.entries(extensionTypes).find(([, mime]) => mime === file.type)?.[0];
   if (!extension) throw new ApiError('Choose a supported image or video file.', 400);
   const filename = `${crypto.randomUUID()}.${extension}`;
@@ -179,21 +202,19 @@ async function uploadBlobMedia(file: File, onProgress: (percentage: number) => v
   let sendingFile = false;
   const timer = setTimeout(() => { timedOut = true; controller.abort(); }, UPLOAD_TIMEOUT);
   try {
-    // Exchange only metadata with Next.js. The signed URL grants access to
-    // this upload alone, and all file bytes go directly to Blob storage.
-    const authorization = await request<{ uploadUrl?: unknown }>('/api/admin/upload', {
+    // Exchange only metadata with Next.js; file bytes go directly to Cloudinary.
+    const authorization = await request<{ uploadUrl?: unknown; fields?: unknown }>('/api/admin/upload', {
       method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ type: 'vivid.upload-authorize', filename }),
     });
-    const uploadUrl = signedUploadUrl(authorization);
+    const signed = signedUpload(authorization, filename, file.type.startsWith('video/'));
     sendingFile = true;
-    await transferBlob(file, uploadUrl, controller.signal, onProgress);
+    const url = await transferCloudinary(file, signed, controller.signal, onProgress);
     const data = await request<{ url?: unknown }>('/api/admin/upload', {
       method: 'POST', signal: controller.signal, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'vivid.upload-complete', filename }),
+      body: JSON.stringify({ type: 'vivid.upload-complete', filename, url }),
     });
-    const value = confirmedUpload(data);
-    if (value.url !== `/api/media/${filename}`) throw new ApiError('The upload confirmation did not match this file. Choose the file again.', 502, true);
+    const value = confirmedUpload(data, url);
     onProgress(100);
     return value;
   } catch (error) {
@@ -207,7 +228,7 @@ export async function uploadMedia(file: File, onProgress: (percentage: number) =
   if (offline()) throw new ApiError('You’re offline. Reconnect before uploading. Your edits are still here.', 0);
   onProgress(0);
   const settings = await request<{ mode?: unknown }>('/api/admin/upload');
-  if (settings?.mode === 'blob') return uploadBlobMedia(file, onProgress);
+  if (settings?.mode === 'cloudinary') return uploadCloudinaryMedia(file, onProgress);
   if (settings?.mode === 'local') return uploadLocalMedia(file, onProgress);
   throw new ApiError('The upload configuration could not be read. Reload the studio and try again.', 502);
 }

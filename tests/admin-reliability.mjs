@@ -135,8 +135,8 @@ test('local upload progress reaches completion only after a valid response and r
   xhr.progress(50, 100);
   xhr.progress(100, 100);
   assert.deepEqual(progress, [0, 50, 99], 'sent bytes alone cannot confirm a successful upload');
-  xhr.complete(201, { url: '/api/media/verified.mp4' });
-  assert.equal((await pending).url, '/api/media/verified.mp4');
+  xhr.complete(201, { url: '/api/media/12345678-1234-1234-1234-123456789abc.mp4' });
+  assert.equal((await pending).url, '/api/media/12345678-1234-1234-1234-123456789abc.mp4');
   assert.equal(progress.at(-1), 100);
   assert.equal(xhr.upload.onprogress, null);
 
@@ -153,25 +153,38 @@ test('local upload progress reaches completion only after a valid response and r
   await malformedCheck;
 });
 
-const signedBlobURL = 'https://vercel.com/api/blob/?pathname=vivid%2Fmedia%2Ffile.mp4&signature=upload-only';
+const cloudinaryUploadURL = 'https://api.cloudinary.com/v1_1/test-cloud/video/upload';
+const cloudinarySignature = 'a'.repeat(40);
 
-function blobFetch({ authorizationStatus = 200, authorizationData = { uploadUrl: signedBlobURL }, complete } = {}) {
+function uploadedResponse(xhr) {
+  const kind = new URL(xhr.url).pathname.split('/')[3];
+  return { secure_url: `https://res.cloudinary.com/test-cloud/${kind}/upload/v123/${xhr.body.get('public_id')}.${xhr.body.get('allowed_formats')}` };
+}
+
+function cloudinaryFetch({ authorizationStatus = 200, authorizationData, complete } = {}) {
   return async (_url, init) => {
-    if (!init.method || init.method === 'GET') return response(200, { mode: 'blob' });
+    if (!init.method || init.method === 'GET') return response(200, { mode: 'cloudinary' });
     const data = JSON.parse(init.body);
-    if (data.type === 'vivid.upload-authorize') return response(authorizationStatus, authorizationData);
+    if (data.type === 'vivid.upload-authorize') {
+      const extension = data.filename.split('.').pop();
+      return response(authorizationStatus, {
+        uploadUrl: `https://api.cloudinary.com/v1_1/test-cloud/${['mp4', 'webm'].includes(extension) ? 'video' : 'image'}/upload`,
+        fields: { timestamp: 123, public_id: `vivid/media/${data.filename.slice(0, -(extension.length + 1))}`, overwrite: false, allowed_formats: extension, type: 'upload', api_key: 'test-key', signature: cloudinarySignature },
+        ...authorizationData,
+      });
+    }
     assert.equal(data.type, 'vivid.upload-complete');
-    return complete ? complete(data) : response(201, { url: `/api/media/${data.filename}` });
+    return complete ? complete(data) : response(201, { url: data.url });
   };
 }
 
-test('files above Vercel request limits use signed raw Blob PUT and progress waits for signature confirmation', async () => {
+test('files above Vercel request limits use signed Cloudinary multipart upload and progress waits for signature confirmation', async () => {
   let completeUpload;
   let finalizationStarted;
   const finalizing = new Promise(resolve => { finalizationStarted = resolve; });
   const harness = apiHarness({
-    fetchImpl: blobFetch({ complete: data => new Promise(resolve => {
-      completeUpload = () => resolve(response(201, { url: `/api/media/${data.filename}` }));
+    fetchImpl: cloudinaryFetch({ complete: data => new Promise(resolve => {
+      completeUpload = () => resolve(response(201, { url: data.url }));
       finalizationStarted();
     }) }),
   });
@@ -179,19 +192,21 @@ test('files above Vercel request limits use signed raw Blob PUT and progress wai
   const progress = [];
   const pending = harness.api.uploadMedia(file, value => progress.push(value));
   const xhr = await harness.nextXHR;
-  assert.equal(xhr.method, 'PUT');
-  assert.equal(xhr.url, signedBlobURL);
-  assert.equal(xhr.body, file, 'raw file bytes go only to the signed storage URL');
+  assert.equal(xhr.method, 'POST');
+  assert.equal(xhr.url, cloudinaryUploadURL);
+  assert.equal(xhr.body.get('file'), file, 'file bytes go only to Cloudinary');
+  assert.equal(xhr.body.get('signature'), cloudinarySignature);
+  assert.equal(xhr.body.get('overwrite'), 'false');
   assert.equal(xhr.withCredentials, false, 'the storage request carries no studio credentials');
-  assert.equal(xhr.headers['Content-Type'], 'video/mp4');
+  assert.equal(xhr.headers['Content-Type'], undefined, 'the browser creates the multipart boundary');
   assert.equal(xhr.timeout, 5 * 60_000);
   xhr.progress(50, 100);
   xhr.progress(100, 100);
   assert.deepEqual(progress, [0, 50, 99]);
   assert.equal(harness.requests.length, 2, 'only configuration and authorization reach Next.js before the transfer finishes');
-  xhr.complete(200, null);
+  xhr.complete(200, uploadedResponse(xhr));
   await finalizing;
-  assert.deepEqual(progress, [0, 50, 99], 'PUT success cannot confirm file contents by itself');
+  assert.deepEqual(progress, [0, 50, 99], 'Cloudinary success cannot confirm file contents by itself');
   assert.equal(harness.requests.length, 3);
   assert.equal(harness.xhrs.length, 1, 'file bytes never use the Next.js multipart endpoint');
   for (const { init } of harness.requests.filter(item => item.init.method === 'POST')) {
@@ -203,7 +218,7 @@ test('files above Vercel request limits use signed raw Blob PUT and progress wai
   assert.match(authorization.filename, /^[0-9a-f-]{36}\.mp4$/);
   assert.equal(confirmation.filename, authorization.filename);
   completeUpload();
-  assert.equal((await pending).url, `/api/media/${authorization.filename}`);
+  assert.equal((await pending).url, uploadedResponse(xhr).secure_url);
   assert.equal(progress.at(-1), 100);
   assert.equal(harness.timers.size, 0);
   assert.equal(xhr.upload.onprogress, null);
@@ -214,12 +229,12 @@ test('files above Vercel request limits use signed raw Blob PUT and progress wai
 
 test('direct uploads retain auth and configuration errors without falling back to oversized multipart requests', async () => {
   const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
-  const missing = apiHarness({ fetchImpl: async () => response(503, { error: 'Connect a private Blob store first.' }) });
-  await assert.rejects(missing.api.uploadMedia(file, () => {}), error => error.status === 503 && /private Blob/.test(error.message));
+  const missing = apiHarness({ fetchImpl: async () => response(503, { error: 'Configure Cloudinary credentials first.' }) });
+  await assert.rejects(missing.api.uploadMedia(file, () => {}), error => error.status === 503 && /Cloudinary/.test(error.message));
   assert.equal(missing.xhrs.length, 0);
   assert.equal(missing.requests.length, 1);
 
-  const expired = apiHarness({ fetchImpl: blobFetch({ authorizationStatus: 401, authorizationData: { error: 'Your studio session has ended.' } }) });
+  const expired = apiHarness({ fetchImpl: cloudinaryFetch({ authorizationStatus: 401, authorizationData: { error: 'Your studio session has ended.' } }) });
   await assert.rejects(expired.api.uploadMedia(file, () => {}), error => error.status === 401 && /session has ended/.test(error.message) && !error.outcomeUnknown);
   assert.equal(expired.xhrs.length, 0);
   assert.equal(expired.requests.length, 2);
@@ -228,8 +243,8 @@ test('direct uploads retain auth and configuration errors without falling back t
 
 test('malformed or untrusted signed authorization URLs cannot receive file bytes', async () => {
   const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
-  for (const uploadUrl of [undefined, 123, 'not a URL', 'http://vercel.com/api/blob/', 'https://evil.example/', 'https://vercel.com/otherpath', 'https://vercel.com/api/blob', 'https://vercel.com.evil.example/api/blob/', 'https://vercel.com@evil.example/api/blob/', 'https://user:secret@vercel.com/api/blob/', 'https://vercel.com:8443/api/blob/', 'https://blob.vercel-storage.com/']) {
-    const harness = apiHarness({ fetchImpl: blobFetch({ authorizationData: { uploadUrl } }) });
+  for (const uploadUrl of [undefined, 123, 'not a URL', 'http://api.cloudinary.com/v1_1/test-cloud/image/upload', 'https://evil.example/', 'https://api.cloudinary.com/otherpath', 'https://api.cloudinary.com/v1_1/test-cloud/image/upload/', 'https://api.cloudinary.com.evil.example/v1_1/test-cloud/image/upload', 'https://api.cloudinary.com@evil.example/v1_1/test-cloud/image/upload', 'https://user:secret@api.cloudinary.com/v1_1/test-cloud/image/upload', 'https://api.cloudinary.com:8443/v1_1/test-cloud/image/upload', 'https://api.cloudinary.com/v1_1/test-cloud/image/upload?secret=1']) {
+    const harness = apiHarness({ fetchImpl: cloudinaryFetch({ authorizationData: { uploadUrl } }) });
     await assert.rejects(harness.api.uploadMedia(file, () => {}), error => error.status === 502 && !error.outcomeUnknown);
     assert.equal(harness.xhrs.length, 0);
     assert.equal(harness.requests.length, 2);
@@ -237,10 +252,35 @@ test('malformed or untrusted signed authorization URLs cannot receive file bytes
   }
 });
 
-test('failed Blob transfers are never finalized and completion errors never show 100 percent', async () => {
+test('signed upload constraints cannot change format, permit overwrites or expose extra credential fields', async () => {
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  for (const tamper of [
+    data => { data.fields.overwrite = true; },
+    data => { data.fields.allowed_formats = 'svg'; },
+    data => { data.fields.public_id = 'vivid/content/latest'; },
+    data => { data.fields.api_secret = 'never-send-server-secrets'; },
+    data => { data.fields.signature = 'missing-a-real-signature'; },
+  ]) {
+    const normalFetch = cloudinaryFetch();
+    const h = apiHarness({ fetchImpl: async (url, init) => {
+      const result = await normalFetch(url, init);
+      if (init.method === 'POST' && JSON.parse(init.body).type === 'vivid.upload-authorize') {
+        const data = await result.json();
+        tamper(data);
+        return response(200, data);
+      }
+      return result;
+    } });
+    await assert.rejects(h.api.uploadMedia(file, () => {}), error => error.status === 502 && !error.outcomeUnknown);
+    assert.equal(h.xhrs.length, 0);
+    assert.equal(h.timers.size, 0);
+  }
+});
+
+test('failed Cloudinary transfers are never finalized and completion errors never show 100 percent', async () => {
   const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
   for (const fail of [xhr => xhr.fail(), xhr => xhr.complete(413, null), xhr => xhr.complete(403, null)]) {
-    const harness = apiHarness({ fetchImpl: blobFetch() });
+    const harness = apiHarness({ fetchImpl: cloudinaryFetch() });
     const progress = [];
     const pending = harness.api.uploadMedia(file, value => progress.push(value));
     const rejected = assert.rejects(pending);
@@ -255,11 +295,12 @@ test('failed Blob transfers are never finalized and completion errors never show
     assert.equal(xhr.onload, null);
   }
   for (const complete of [() => response(400, { error: 'The file contents must match its type.' }), () => response(201, {}), () => response(201, { url: '/api/media/another.png' })]) {
-    const harness = apiHarness({ fetchImpl: blobFetch({ complete }) });
+    const harness = apiHarness({ fetchImpl: cloudinaryFetch({ complete }) });
     const progress = [];
     const pending = harness.api.uploadMedia(file, value => progress.push(value));
     const rejected = assert.rejects(pending);
-    (await harness.nextXHR).complete(200, null);
+    await harness.nextXHR;
+    harness.xhrs[0].complete(200, uploadedResponse(harness.xhrs[0]));
     await rejected;
     assert.equal(harness.requests.length, 3);
     assert.ok(!progress.includes(100));
@@ -267,8 +308,29 @@ test('failed Blob transfers are never finalized and completion errors never show
   }
 });
 
+test('Cloudinary image transfers confirm the exact CDN asset and reject malformed successful responses', async () => {
+  const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
+  const success = apiHarness({ fetchImpl: cloudinaryFetch() });
+  const pending = success.api.uploadMedia(file, () => {});
+  const xhr = await success.nextXHR;
+  assert.match(xhr.url, /\/image\/upload$/);
+  assert.equal(xhr.body.get('allowed_formats'), 'jpg');
+  assert.equal(xhr.body.get('file'), file);
+  xhr.complete(200, uploadedResponse(xhr));
+  assert.equal((await pending).url, uploadedResponse(xhr).secure_url);
+
+  for (const result of [null, {}, { secure_url: 'https://foreign.example/photo.jpg' }, { secure_url: 'https://res.cloudinary.com/other-cloud/image/upload/v123/vivid/media/12345678-1234-1234-1234-123456789abc.jpg' }]) {
+    const h = apiHarness({ fetchImpl: cloudinaryFetch() });
+    const attempt = h.api.uploadMedia(file, () => {});
+    const rejected = assert.rejects(attempt, error => error.status === 502 && error.outcomeUnknown);
+    (await h.nextXHR).complete(200, result);
+    await rejected;
+    assert.equal(h.requests.length, 2, 'unconfirmed CDN assets never reach finalization');
+  }
+});
+
 test('direct upload timeout aborts the transfer and clears timers without finalizing', async () => {
-  const harness = apiHarness({ fetchImpl: blobFetch() });
+  const harness = apiHarness({ fetchImpl: cloudinaryFetch() });
   const file = new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' });
   const pending = harness.api.uploadMedia(file, () => {});
   const rejected = assert.rejects(pending, error => error.status === 408 && error.outcomeUnknown && /timed out/.test(error.message));
@@ -288,7 +350,7 @@ test('the direct upload deadline also covers authorization and finalization with
   for (const phase of ['vivid.upload-authorize', 'vivid.upload-complete']) {
     let phaseStarted;
     const started = new Promise(resolve => { phaseStarted = resolve; });
-    const normalFetch = blobFetch();
+    const normalFetch = cloudinaryFetch();
     const harness = apiHarness({ fetchImpl: async (url, init) => {
       if (init.method === 'POST' && JSON.parse(init.body).type === phase) {
         return new Promise((_resolve, reject) => {
@@ -300,14 +362,17 @@ test('the direct upload deadline also covers authorization and finalization with
     } });
     const pending = harness.api.uploadMedia(new File(['photo'], 'portrait.jpg', { type: 'image/jpeg' }), () => {});
     const rejected = assert.rejects(pending, error => error.status === 408 && error.outcomeUnknown === (phase === 'vivid.upload-complete'));
-    if (phase === 'vivid.upload-complete') (await harness.nextXHR).complete(200, null);
+    if (phase === 'vivid.upload-complete') {
+      const xhr = await harness.nextXHR;
+      xhr.complete(200, uploadedResponse(xhr));
+    }
     await started;
     [...harness.timers.values()].find(value => value.duration === 5 * 60_000).callback();
     await rejected;
     assert.equal(harness.requests.at(-1).init.signal.aborted, true);
     assert.equal(harness.timers.size, 0);
     if (phase === 'vivid.upload-authorize') assert.equal(harness.xhrs.length, 0);
-    else assert.equal(harness.xhrs[0].abortCalls, 0, 'a completed PUT has detached the shared signal listener');
+    else assert.equal(harness.xhrs[0].abortCalls, 0, 'a completed upload has detached the shared signal listener');
   }
 });
 
@@ -412,11 +477,13 @@ test('expired, corrupt and malformed recovery records cannot reopen an editor', 
 });
 
 function renderedEditorHarness() {
+  const instagramContext = { exports: {}, URL };
+  vm.runInNewContext(compiled('src/lib/instagram.ts'), instagramContext, { filename: 'src/lib/instagram.ts' });
   const context = {
     exports: {},
-    require: id => id === './api' ? {} : require(id),
+    require: id => id === './api' ? {} : id === '../lib/instagram' ? instagramContext.exports : require(id),
   };
-  const code = `${compiled('src/admin/Studio.tsx')}\nexports.__controls = { MediaField, ContentEditor };`;
+  const code = `${compiled('src/admin/Studio.tsx')}\nexports.__controls = { MediaField, ReelVideoField, ContentEditor };`;
   vm.runInNewContext(code, context, { filename: 'src/admin/Studio.tsx' });
   return context.exports.__controls;
 }
@@ -446,7 +513,7 @@ test('image and video media controls offer file upload without a media URL input
 });
 
 // test('creator social profile links remain editable while media inputs stay upload-only', () => {
-test('creator editing is temporarily disabled while reel media stays upload-only', () => {
+test('creator editing remains disabled and an existing uploaded reel keeps its video control', () => {
   const { ContentEditor } = renderedEditorHarness();
   const noop = () => {};
   const creator = editorFixture('creator');
@@ -465,6 +532,46 @@ test('creator editing is temporarily disabled while reel media stays upload-only
   assert.doesNotMatch(reelMarkup, /Creator profile|Creator name/);
   assert.equal(inputElements(reelMarkup).filter(input => /type="url"/.test(input)).length, 0);
   assert.equal(inputElements(reelMarkup).filter(input => /type="file"/.test(input)).length, 2);
+  assert.match(reelMarkup, /Instagram link/);
+  assert.match(reelMarkup, /Upload video/);
+  const cloudinaryEditor = editorFixture('reel');
+  cloudinaryEditor.value.video = 'https://res.cloudinary.com/test-cloud/video/upload/v123/vivid/media/12345678-1234-1234-1234-123456789abc.mp4';
+  const cloudinaryMarkup = renderToStaticMarkup(React.createElement(ContentEditor, { ...props, editor: cloudinaryEditor }));
+  assert.match(cloudinaryMarkup, /Instagram link/);
+  assert.match(cloudinaryMarkup, /Upload video/);
+  assert.match(cloudinaryMarkup, /<video[^>]+src="https:\/\/res\.cloudinary\.com\//);
+});
+
+test('new and linked reels offer an Instagram URL while their cover stays upload-only', () => {
+  const { ContentEditor } = renderedEditorHarness();
+  const noop = () => {};
+  for (const video of ['', 'https://www.instagram.com/reel/ABC123/?igsh=share']) {
+    const editor = editorFixture('reel');
+    editor.value.video = video;
+    editor.value.published = true;
+    editor.isNew = !video;
+    const markup = renderToStaticMarkup(React.createElement(ContentEditor, {
+      editor, creators: [], brands: [], saving: false, onSave: async () => true,
+      onClose: noop, onDraftChange: noop, onSessionExpired: noop, onErrorClear: noop,
+    }));
+    const inputs = inputElements(markup);
+    const links = inputs.filter(input => /type="url"/.test(input));
+    assert.equal(links.length, 1);
+    assert.match(links[0], /required=""/);
+    assert.match(links[0], /placeholder="https:\/\/www\.instagram\.com\/reel\//);
+    assert.equal(inputs.filter(input => /type="file"/.test(input)).length, 1, 'the cover still uses a file picker');
+    assert.match(markup, /Instagram link|Upload video/);
+    assert.match(markup, /must be public and allow embedding/);
+    if (video) assert.match(markup, /href="https:\/\/www\.instagram\.com\/reel\/ABC123\/"/);
+  }
+});
+
+test('Instagram links survive unsaved draft recovery', () => {
+  const harness = draftHarness();
+  const editor = editorFixture('reel');
+  editor.value.video = 'https://www.instagram.com/reel/ABC123/?igsh=share';
+  harness.rememberDraft(editor);
+  assert.equal(harness.recoveredDraft().value.video, editor.value.video);
 });
 
 test('brand logos are upload-only while brand website links remain editable', () => {

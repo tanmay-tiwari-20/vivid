@@ -14,6 +14,7 @@ import '../src/work-brands.css';
 // import '../src/creators.css';
 // import '../src/creators-hero.css';
 import '../src/hero-reels.css';
+import '../src/instagram-cards.css';
 
 const manrope = localFont({
   src: '../public/fonts/manrope-variable.woff2',

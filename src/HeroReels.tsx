@@ -5,21 +5,6 @@ import Link from 'next/link';
 import { ArrowUpRight, Eye, Instagram, Play, Users } from 'lucide-react';
 import type { Reel } from './lib/content-types';
 
-function metricCount(value: string): number {
-  const match = value.replace(/,/g, '').trim().match(/^(\d+(?:\.\d+)?)\s*([kmb])?\+?(?:\s+(?:views|reach))?$/i);
-  if (!match) return 0;
-  const multiplier = { k: 1_000, m: 1_000_000, b: 1_000_000_000 }[match[2]?.toLowerCase() as 'k' | 'm' | 'b'] || 1;
-  return Number(match[1]) * multiplier;
-}
-
-function popularReels(campaigns: Reel[]): Reel[] {
-  return campaigns.filter(reel => reel.published && reel.featured).sort((a, b) =>
-    metricCount(b.views) - metricCount(a.views)
-    || metricCount(b.reach) - metricCount(a.reach)
-    || Number(b.featured) - Number(a.featured)
-  ).slice(0, 3);
-}
-
 function ReelStar() {
   return <svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><path d="M50 0 58 32 85 15 68 42 100 50 68 58 85 85 58 68 50 100 42 68 15 85 32 58 0 50 32 42 15 15 42 32Z" fill="currentColor" /></svg>;
 }
@@ -44,16 +29,16 @@ function HeroReel({ reel, position, onCampaign }: { reel: Reel; position: 'main'
 }
 
 export default function HeroReels({ campaigns, onCampaign }: { campaigns: Reel[]; onCampaign: (reel: Reel) => void }) {
-  const reels = popularReels(campaigns);
+  // The saved studio order is the priority; metrics are display-only.
+  const reels = campaigns.filter(reel => reel.published && reel.featured).slice(0, 3);
   const leading = reels[0];
   const metric = leading?.views || leading?.reach;
-  return <div className="hero-art hero-reels" data-count={reels.length} role="group" aria-label="Popular campaign reels">
+  return <div className="hero-art hero-reels" data-count={reels.length} role="group" aria-label="Featured campaign reels">
     <div className="art-orbit orbit-one" aria-hidden="true" /><div className="art-orbit orbit-two" aria-hidden="true" />
     <span className="art-cross cross-one" aria-hidden="true">+</span><span className="art-cross cross-two" aria-hidden="true">+</span>
     <div className="hero-reels-heading"><span className="live-dot" /> REELS IN THE SPOTLIGHT</div>
-    {reels[1] && <HeroReel reel={reels[1]} position="left" onCampaign={onCampaign} />}
-    {reels[2] && <HeroReel reel={reels[2]} position="right" onCampaign={onCampaign} />}
-    {leading ? <HeroReel reel={leading} position="main" onCampaign={onCampaign} /> : <Link className="hero-reels-empty" href="/work"><ReelStar /><strong>Your next<br />vivid story.</strong><span>Explore the work <ArrowUpRight size={18} /></span></Link>}
+    {reels.map((reel, index) => <HeroReel key={reel.id} reel={reel} position={(['main', 'left', 'right'] as const)[index]} onCampaign={onCampaign} />)}
+    {!leading && <Link className="hero-reels-empty" href="/work"><ReelStar /><strong>Your next<br />vivid story.</strong><span>Explore the work <ArrowUpRight size={18} /></span></Link>}
     <div className="hero-reels-stamp" aria-hidden="true"><ReelStar /><small>PRESS PLAY</small><strong>FEEL<br />SOMETHING.</strong></div>
     {metric && <div className="hero-reels-result"><span className="hero-reels-result-icon"><Play size={20} fill="currentColor" aria-hidden="true" /></span><div><small>THE VIVID EFFECT</small><strong>{metric}</strong><span>{leading.views ? 'views' : 'reach'}</span></div><ArrowUpRight size={20} aria-hidden="true" /></div>}
     <div className="hero-reels-note" aria-hidden="true">Good stories.<br />Great company.<svg viewBox="0 0 100 50" fill="none"><path d="M6 40C48 48 78 29 77 7M64 16 78 4 88 21" /></svg></div>

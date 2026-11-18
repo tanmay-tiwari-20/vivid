@@ -8,6 +8,7 @@ import Link from 'next/link';
 import type { Reel, Creator, SiteContent } from './lib/content-types';
 import { ContentFilters, EmptyContent, usePublicContent } from './ContentBrowser';
 import ReelPlayer from './ReelPlayer';
+import { getInstagramReel } from './lib/instagram';
 import Work from './Work';
 import HeroReels from './HeroReels';
 // import CreatorsPage from './CreatorsPage';
@@ -175,6 +176,7 @@ function Modal({ children, onClose, title, className = '' }: { children: ReactNo
 
 // function CampaignModal({ campaign, onClose, onContact, creator, onCreator }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler; creator?: Creator; onCreator: (creator: Creator) => void }) {
 function CampaignModal({ campaign, onClose, onContact }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler }) {
+  if (getInstagramReel(campaign.video)) return <Modal onClose={onClose} title={campaign.title} className="campaign-modal instagram-reel-modal"><ReelPlayer reel={campaign} /></Modal>;
   return <Modal onClose={onClose} title={campaign.title} className="campaign-modal"><ReelPlayer reel={campaign} /><div className="campaign-detail"><div className="eyebrow"><span /> {campaign.category}</div><span className="detail-brand">{campaign.brand}</span><h2>{campaign.title}</h2><p>{campaign.description}</p>{/* {campaign.creator && <div className="detail-creator">Created with {creator ? <button className="creator-inline-link" onClick={() => onCreator(creator)}>{creator.name}<ArrowUpRight size={14} /></button> : <strong>{campaign.creator}</strong>}</div>} */}{(campaign.views || campaign.reach) && <div className="detail-metrics">{campaign.views && <div><strong>{campaign.views}</strong><span>Views</span></div>}{campaign.reach && <div><strong>{campaign.reach}</strong><span>Reach</span></div>}</div>}<button className="button button-lime" onClick={() => onContact('brand')}>Create a story like this <ArrowUpRight size={18} /></button>{/* {campaign.demo && <p className="disclosure">A sample concept with stock media. Creator profiles, brand associations, and figures are illustrative.</p>} */}</div></Modal>;
 }
 

@@ -96,6 +96,30 @@
 .reel-external>div{min-width:0;max-width:100%;padding:28px 22px;gap:20px}
 .reel-external p{font-size:14px;line-height:1.7;overflow-wrap:anywhere}
 .reel-external .button{font-size:12px;padding:14px 18px}
+.campaign-modal.instagram-reel-modal{display:block;width:min(420px,100%);height:min(880px,calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom)));max-height:none;overflow:hidden;background:#102a21;border-color:#ffffff30}
+.campaign-modal.instagram-reel-modal .reel-instagram-player{position:relative;top:auto;display:flex;flex-direction:column;width:100%;height:100%;min-height:0;max-height:none;aspect-ratio:auto;background:#102a21;color:#fff;overflow:hidden}
+.instagram-reel-modal .modal-close{width:34px;height:34px;top:9px;right:10px;background:#ffffff0c;color:#e5f6ee;border-color:#ffffff25;box-shadow:none}
+.instagram-reel-modal .modal-close:hover{background:#ffffff20}
+.instagram-reel-modal .modal-close svg{width:18px;height:18px}
+.instagram-player-heading{display:flex;align-items:center;gap:9px;flex:0 0 52px;padding:10px 16px;padding-right:54px}
+.instagram-player-icon{display:grid;place-items:center;color:#a8e8ca}
+.instagram-player-icon svg{width:17px;height:17px}
+.instagram-player-heading strong{font-size:12px;font-weight:600;letter-spacing:.1px}
+.instagram-player-stage{position:relative;flex:1 1 0;min-height:0;padding:0 8px;display:grid;place-items:center;overflow:hidden}
+.instagram-embed-frame{position:relative;max-width:100%;flex-shrink:0;overflow:hidden;border-radius:10px;background:#fff}
+.instagram-embed-frame>iframe{display:block;width:326px;height:760px;border:0;background:#fff;transform-origin:top left}
+.instagram-player-footer{position:relative;flex:0 0 52px;display:flex;align-items:center;justify-content:center;padding:8px 14px}
+.instagram-watch-link{display:flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:7px 12px;border-radius:7px;color:#b8e9d1;font-size:11px;font-weight:600;transition:background .2s,color .2s}
+.instagram-watch-link svg{width:14px;height:14px;flex-shrink:0}
+.instagram-watch-link:hover{background:#ffffff0c;color:#e1ffef}
+.instagram-watch-link:focus-visible{outline:2px solid #b8e9d1;outline-offset:2px}
+.instagram-loading-status{position:absolute;top:-28px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;white-space:nowrap;border-radius:20px;padding:6px 10px;background:#102a21eb;color:#d7eee1;font-size:10px;pointer-events:none}
+.instagram-loading-ring{width:12px;height:12px;border:1.5px solid #ffffff30;border-top-color:#a8e8ca;border-radius:50%;animation:instagram-loading .8s linear infinite}
+.instagram-player-unavailable{position:relative;display:flex;align-items:end;width:100%;height:100%;overflow:hidden;border-radius:10px;isolation:isolate}
+.instagram-player-unavailable>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2}
+.instagram-player-unavailable:after{content:'';position:absolute;inset:0;background:linear-gradient(transparent,#102a21dd);z-index:-1}
+.instagram-player-unavailable>p{padding:24px 20px;font-size:12px;line-height:1.7;color:#fff}
+@keyframes instagram-loading{to{transform:rotate(360deg)}}
 .contact-modal{width:min(640px,100%);padding:42px}
 .contact-modal>.eyebrow{font-size:10px;letter-spacing:1.2px;line-height:1.7;padding-right:24px}
 .contact-modal h2{font-size:40px;letter-spacing:-1.7px;line-height:1.15;margin-top:20px}
@@ -149,4 +173,7 @@
   .contact-success .button{align-self:stretch}
   .contact-success h2{font-size:40px}
 }
-@media(prefers-reduced-motion:reduce){.modal-backdrop{animation:none}.modal .button{transition:none}}
+@media(prefers-reduced-motion:reduce){.modal-backdrop{animation:none}.modal .button,.instagram-watch-link{transition:none}.instagram-loading-ring{animation:none}}
+
+@media(max-width:760px){.campaign-modal.instagram-reel-modal{height:calc(100dvh - 28px - env(safe-area-inset-top) - env(safe-area-inset-bottom));width:min(420px,100%)}}
+@media(max-width:400px){.campaign-modal.instagram-reel-modal{height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}}

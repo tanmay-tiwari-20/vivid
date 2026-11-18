@@ -122,27 +122,22 @@ test('persistent saves survive fresh module instances and serialize revision con
   } finally { await fs.rm(directory, { recursive: true, force: true }); }
 });
 
-test('explicit local storage reads and saves existing records without contacting connected Blob', async () => {
+test('explicit local storage reads and saves existing records without contacting connected Cloudinary', async () => {
   await withUploadStore(async ({ store, directory, image }) => {
     const existing = await store.readContent();
-    existing.reels[0].title = 'Saved before Blob was connected';
+    existing.reels[0].title = 'Saved before Cloudinary was connected';
     await store.saveContent(existing);
 
-    const blobCalls = [];
-    const blob = { ...require('@vercel/blob') };
-    for (const method of ['get', 'put', 'head']) blob[method] = async () => {
-      blobCalls.push(method);
-      throw new Error('Local storage must not contact Blob.');
-    };
+    const cloudinaryCalls = [];
+    const cloudinary = { config() { cloudinaryCalls.push('config'); throw new Error('Local storage must not contact Cloudinary.'); } };
     const environment = {
       VIVID_STORAGE_MODE: 'local', VIVID_DATA_DIR: directory,
-      BLOB_STORE_ID: 'store_development', VERCEL_OIDC_TOKEN: 'expired-development-token',
-      BLOB_READ_WRITE_TOKEN: 'stale-server-token',
+      CLOUDINARY_CLOUD_NAME: 'development', CLOUDINARY_API_KEY: 'stale-key', CLOUDINARY_API_SECRET: 'stale-secret',
     };
-    const overrides = { '@vercel/blob': blob };
+    const overrides = { cloudinary: { v2: cloudinary } };
     const local = loadBackend(environment, overrides)('content.ts');
     const content = await local.readContent();
-    assert.equal(content.reels[0].title, 'Saved before Blob was connected');
+    assert.equal(content.reels[0].title, 'Saved before Cloudinary was connected');
     content.reels[0].title = 'Updated in local storage';
     content.reels[0].image = image;
     const saved = await local.saveContent(content);
@@ -151,7 +146,7 @@ test('explicit local storage reads and saves existing records without contacting
     const persisted = JSON.parse(await fs.readFile(path.join(directory, 'content.json'), 'utf8'));
     assert.equal(persisted.reels[0].title, 'Updated in local storage');
     assert.equal(persisted.reels[0].image, image);
-    assert.deepEqual(blobCalls, []);
+    assert.deepEqual(cloudinaryCalls, []);
   });
 });
 
@@ -216,7 +211,50 @@ test('unchanged legacy media survives edits and ordering without permitting it o
   });
 });
 
-test('saving rejects new or changed media links, wrong upload types, missing files, and directory references without changing stored content', async () => {
+test('Instagram linked reels save and publish with uploaded covers, and can switch back to uploaded videos', async () => {
+  await withUploadStore(async ({ store, directory, image, video }) => {
+    const next = await store.readContent();
+    next.reels[0].video = 'https://instagram.com/reel/ABC123/?igsh=share#tracking';
+    next.reels.push({ ...next.reels[0], id: 'instagram-reel', image, video: 'https://m.instagram.com/reels/XYZ789/?utm_source=copy' });
+    let saved = await store.saveContent(next);
+    assert.equal(saved.reels[0].video, 'https://www.instagram.com/reel/ABC123/');
+    assert.equal(saved.reels.find(item => item.id === 'instagram-reel').video, 'https://www.instagram.com/reel/XYZ789/');
+    const restarted = loadBackend({ VIVID_DATA_DIR: directory })('content.ts');
+    assert.equal((await restarted.readContent()).reels[0].video, saved.reels[0].video);
+    assert.equal(store.publicContent(saved).reels.find(item => item.id === 'instagram-reel').video, 'https://www.instagram.com/reel/XYZ789/');
+    const draft = structuredClone(saved);
+    draft.reels.find(item => item.id === 'instagram-reel').published = false;
+    saved = await store.saveContent(draft);
+    assert.equal(store.publicContent(saved).reels.some(item => item.id === 'instagram-reel'), false);
+    saved.reels[0].video = video;
+    saved = await store.saveContent(saved);
+    assert.equal(saved.reels[0].video, video);
+  });
+});
+
+test('unsupported Instagram destinations and linked covers are rejected without changing saved content', async () => {
+  await withUploadStore(async ({ store, image }) => {
+    const current = await store.saveContent(await store.readContent());
+    for (const source of ['https://instagram.com/creator/', 'https://instagram.com/reel/ABC123/embed/', 'https://instagram.com.evil.example/reel/ABC123/', 'https://www.instagram.com/reel/ABC123/extra', 'https://instagram.com:8443/reel/ABC123/']) {
+      const next = structuredClone(current);
+      next.reels[0].video = source;
+      await assert.rejects(() => store.saveContent(next), error => error.status === 400 && /Instagram reel link/.test(error.message));
+    }
+    const noCover = structuredClone(current);
+    noCover.reels.push({ ...noCover.reels[0], id: 'missing-cover', image: '', video: 'https://www.instagram.com/reel/ABC123/' });
+    await assert.rejects(() => store.saveContent(noCover), error => error.status === 400 && /cover image/.test(error.message));
+    const linkedCover = structuredClone(current);
+    linkedCover.reels[0].image = 'https://www.instagram.com/reel/ABC123/';
+    linkedCover.reels[0].video = 'https://www.instagram.com/reel/ABC123/';
+    await assert.rejects(() => store.saveContent(linkedCover), error => error.status === 400 && /uploaded image/.test(error.message));
+    const reusedSampleCover = structuredClone(current);
+    reusedSampleCover.reels.push({ ...reusedSampleCover.reels[0], id: 'unuploaded-cover', video: 'https://www.instagram.com/reel/ABC123/' });
+    await assert.rejects(() => store.saveContent(reusedSampleCover), error => error.status === 400 && /uploaded image/.test(error.message));
+    assert.equal(JSON.stringify(await store.readContent()), JSON.stringify(current));
+  });
+});
+
+test('saving rejects unsupported media links, wrong upload types, missing files, and directory references without changing stored content', async () => {
   await withUploadStore(async ({ store, image, video }) => {
     const current = await store.saveContent(await store.readContent());
     const directoryImage = `/api/media/${randomUUID()}.png`;

@@ -1,5 +1,6 @@
 import type { Brand, Creator, Reel, SiteContent } from './content-types';
 import { initialBrands } from './content-seed';
+import { getInstagramReel } from './instagram';
 
 export class ContentError extends Error {
   constructor(message: string, public status = 400) { super(message); }
@@ -99,12 +100,13 @@ export function validateContent(value: unknown): SiteContent {
     if (brandId && !brandIds.has(brandId)) throw new ContentError(`${label} references a deleted brand. Choose another brand or remove the link.`);
     const color = text(item.color, `${label} color`, 7, true);
     if (!/^#[0-9a-fA-F]{6}$/.test(color)) throw new ContentError(`${label} color must be a six-digit hex color.`);
+    const video = safeMediaUrl(item.video, `${label} video`, published);
     return {
       id: id(item.id, `${label} ID`), title: text(item.title, `${label} title`, 200, true),
       brand: brandId ? brands.find(brand => brand.id === brandId)!.name : text(item.brand, `${label} brand`, 120), brandId, creatorId,
       creator: creatorId ? creators.find(creator => creator.id === creatorId)!.name : text(item.creator, `${label} creator`, 120),
       category: text(item.category, `${label} category`, 100), description: text(item.description, `${label} description`, 5000),
-      image: safeMediaUrl(item.image, `${label} cover image`, published), video: safeMediaUrl(item.video, `${label} video`, published),
+      image: safeMediaUrl(item.image, `${label} cover image`, published), video: getInstagramReel(video)?.url ?? video,
       views: text(item.views, `${label} views`, 30), reach: text(item.reach, `${label} reach`, 30), color,
       featured: flag(item.featured, `${label} featured`), published, demo: flag(item.demo, `${label} demo`),
     };
