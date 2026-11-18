@@ -64,7 +64,7 @@ function Nav({ onContact, page }: { onContact: ContactHandler; page: string }) {
   }, [open]);
   return <div className="nav-space"><header ref={header} className={`site-header${hidden && !open ? ' is-hidden' : ''}`} onFocusCapture={() => setHidden(false)}>
     <div className="container nav-inner">
-      <Link className="brand-logo" href="/" aria-label="Vivid Media Works home" onClick={() => setOpen(false)}><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width="289" height="98" /></Link>
+      <Link className="brand-logo" href="/" aria-label="Vivid Media Works home" onClick={() => setOpen(false)}><img src="/images/vivid-logo-light.png" alt="Vivid Media Works" width="1200" height="540" /></Link>
       <nav className="desktop-nav" aria-label="Main navigation"><Link href="/about" aria-current={page === 'about' ? 'page' : undefined}>Who we are</Link><Link href="/work" aria-current={page === 'work' ? 'page' : undefined}>Our work</Link>{/* <Link href="/creators" aria-current={page === 'creators' ? 'page' : undefined}>The creators</Link> */}<Link href="/approach" aria-current={page === 'approach' ? 'page' : undefined}>Our approach</Link></nav>
       <button className="nav-cta" onClick={() => onContact('brand')}>Let’s talk <ArrowUpRight size={17} /></button>
       <button ref={menuButton} className="menu-toggle icon-button" onClick={() => setOpen(!open)} aria-label={open ? 'Close navigation' : 'Open navigation'} aria-expanded={open} aria-controls="mobile-nav">{open ? <X /> : <Menu />}</button>

@@ -58,7 +58,7 @@ export default function AboutPage({ onContact }: { onContact: (type: ContactType
                 <div className={styles.visualPlaceholder}><UsersRound size={64} strokeWidth={1} aria-hidden="true" /><span>Different voices.<br />Endless possibility.</span></div>
               </div>
               <div className={styles.connectionNote}><span><HeartHandshake size={18} strokeWidth={1.5} aria-hidden="true" /></span>Better, together.</div>
-              <div className={styles.visualManifesto}><span>OUR KIND OF INFLUENCE</span><p>Human connection.<br /><em>Creative possibility.</em></p><div><span>BRANDS <Plus size={10} aria-hidden="true" /> CREATORS <Plus size={10} aria-hidden="true" /> CULTURE</span><img src="/images/vivid-mark.svg" alt="" width="32" height="32" /></div></div>
+              <div className={styles.visualManifesto}><span>OUR KIND OF INFLUENCE</span><p>Human connection.<br /><em>Creative possibility.</em></p><div><span>BRANDS <Plus size={10} aria-hidden="true" /> CREATORS <Plus size={10} aria-hidden="true" /> CULTURE</span><img src="/images/vivid-mark-dark.png" alt="" width="1024" height="736" /></div></div>
             </div>
             <div className={styles.visualFootnote}><span>DIFFERENT VOICES. ONE VIVID VISION.</span>{/* {portraits.some(creator => creator.demo) && <span>Illustrative stock portraits.</span>} */}</div>
           </div>

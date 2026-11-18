@@ -59,7 +59,7 @@
 .visualManifesto p em { font-family: Georgia, serif; font-weight: 400; color: #8ce3bf; }
 .visualManifesto > div { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-top: 14px; padding-top: 10px; border-top: 1px solid #ffffff26; }
 .visualManifesto > div > span { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 7px; font-size: 8px; line-height: 1.8; letter-spacing: .07em; color: #b5d9c8; }
-.visualManifesto img { width: 25px; height: 25px; filter: brightness(0) invert(1); opacity: .85; }
+.visualManifesto img { width: 25px; height: 25px; object-fit: contain; }
 .visualFootnote { display: flex; justify-content: space-between; gap: 15px; padding: 14px 5px 0; color: var(--muted); font-size: 8px; line-height: 1.7; }
 .visualFootnote > span:first-child { letter-spacing: .06em; }
 .visualFootnote > span:last-child { text-align: right; }

@@ -401,9 +401,9 @@ export default function Studio() {
   const heroReelIds = content?.reels.filter(item => item.published && item.featured).slice(0, 3).map(item => item.id) || [];
   const notification = notice && (!session?.authenticated || !editor) && <div className={`studio-toast studio-toast-${notice.type}`} role={notice.type === 'error' ? 'alert' : 'status'}>{notice.type === 'success' ? <CheckCircle2 size={19} /> : <Circle size={19} />}<span>{notice.text}</span><button aria-label="Dismiss notification" onClick={() => setNotice(null)}><X size={16} /></button></div>;
 
-  if (!session || session.authenticated && !content) return <div className="studio-loading"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} />{loadError ? <><p role="alert">{loadError}</p><button className="studio-primary" onClick={() => void load()}>Try again</button></> : <><LoaderCircle size={25} className="studio-spin" /><p>Opening your studio…</p></>}</div>;
+  if (!session || session.authenticated && !content) return <div className="studio-loading"><img src="/images/vivid-logo-light.png" alt="Vivid Media Works" width={1200} height={540} />{loadError ? <><p role="alert">{loadError}</p><button className="studio-primary" onClick={() => void load()}>Try again</button></> : <><LoaderCircle size={25} className="studio-spin" /><p>Opening your studio…</p></>}</div>;
   if (!session.authenticated) return <div className="studio-login"><main className="studio-login-main">
-    <a className="studio-brand" href="/" aria-label="Vivid Media Works home"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} /></a>
+    <a className="studio-brand" href="/" aria-label="Vivid Media Works home"><img src="/images/vivid-logo-light.png" alt="Vivid Media Works" width={1200} height={540} /></a>
     <div className="studio-login-box"><span className="studio-lock"><LockKeyhole size={24} /></span><h1>Sign in to your studio</h1>
       {/* <p>Manage your reels, creators, and brands.</p> */}
       <p>Manage your reels and brands.</p>
@@ -414,7 +414,7 @@ export default function Studio() {
   </main>{notification}</div>;
 
   return <div className="studio-shell">
-    <header className="studio-header"><div className="studio-header-inner"><a className="studio-brand" href="/"><img src="/images/vivid-logo.svg" alt="Vivid Media Works" width={289} height={98} /><span>Studio</span></a><div className="studio-header-actions"><a className="studio-secondary" href="/" target="_blank" rel="noopener noreferrer">View site <ExternalLink size={16} /></a><button className="studio-icon" aria-label="Sign out" title="Sign out" onClick={() => void logout()} disabled={saving}><LogOut size={19} /></button></div></div></header>
+    <header className="studio-header"><div className="studio-header-inner"><a className="studio-brand" href="/"><img src="/images/vivid-logo-light.png" alt="Vivid Media Works" width={1200} height={540} /><span>Studio</span></a><div className="studio-header-actions"><a className="studio-secondary" href="/" target="_blank" rel="noopener noreferrer">View site <ExternalLink size={16} /></a><button className="studio-icon" aria-label="Sign out" title="Sign out" onClick={() => void logout()} disabled={saving}><LogOut size={19} /></button></div></div></header>
     <main className="studio-main"><div className="studio-main-content"><div className="studio-page-heading"><h1>Content studio</h1><p>Keep your website up to date.</p></div>
       {!online && <div className="studio-offline" role="status"><WifiOff size={18} /><span>You’re offline. Reconnect to save or upload. Your edits are kept in this tab.</span></div>}
       {/* Creators tab temporarily disabled.
