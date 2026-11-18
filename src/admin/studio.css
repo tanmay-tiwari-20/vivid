@@ -63,9 +63,10 @@
 /* A small header and clear content tabs keep the dashboard easy to scan. */
 .studio-shell { min-height: 100dvh; background: #f7f9f7; }
 .studio-header { position: sticky; top: 0; z-index: 20; background: #ffffffed; border-bottom: 1px solid var(--studio-line); backdrop-filter: blur(12px); }
-.studio-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1100px; min-height: 82px; margin-inline: auto; padding: 17px 30px; }
+.studio-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 20px; max-width: 1100px; min-height: calc(var(--site-header-height, 76px) - 1px); margin-inline: auto; padding: 0 30px; }
 .studio-brand { display: inline-flex; align-items: center; gap: 16px; min-width: 0; }
 .studio-brand img { display: block; width: 144px; height: auto; max-height: none; object-fit: contain; }
+.studio-header .studio-brand img { width: 104px; }
 .studio-brand > span { border-left: 1px solid var(--studio-line); padding-left: 16px; color: var(--studio-muted); font-size: 13px; font-weight: 600; }
 .studio-header-actions { display: flex; align-items: center; flex-shrink: 0; gap: 9px; }
 .studio-header-actions .studio-secondary { font-size: 12px; }
@@ -267,16 +268,24 @@
   .studio-card-body:has(.studio-card-details) .studio-card-footer { grid-column: 1 / -1; grid-row: 2; }
 }
 
+@media (max-width: 900px) {
+  .studio-header .studio-brand img { width: 96px; }
+}
+
 @media (max-width: 780px) {
   .studio-toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
   .studio-search { max-width: none; }
   .studio-filters { width: 100%; }
   .studio-filters button { flex: 1; padding-inline: 9px; }
   .studio-main-content { padding: 30px 22px 40px; }
-  .studio-header-inner { min-height: 74px; padding: 14px 22px; }
+  .studio-header-inner { padding-inline: 22px; }
   .studio-content-heading p { max-width: 380px; }
   .studio-page-heading { margin-bottom: 22px; }
   .studio-tabs { margin-bottom: 25px; }
+}
+
+@media (max-width: 700px) {
+  .studio-header .studio-brand img { width: 88px; }
 }
 
 @media (max-width: 600px) {
@@ -335,6 +344,10 @@
   .studio-cover-preview p,.studio-cover-preview small { font-size: 11px; }
   .studio-confirm { padding: 28px 24px 24px; }
   .studio-confirm h2 { font-size: 21px; }
+}
+
+@media (max-width: 380px) {
+  .studio-header .studio-brand img { width: 80px; }
 }
 
 @media (max-width: 360px) {
