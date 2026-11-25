@@ -75,24 +75,26 @@ test('content validation rejects unsafe URLs, duplicate IDs, dangling creator li
   assert.throws(() => validateContent(flag));
   const renamed = content(); renamed.creators.find(item => item.id === 'anaya').name = 'Updated creator';
   assert.equal(validateContent(renamed).reels[0].creator, 'Updated creator');
-  renamed.brands.find(item => item.id === 'nykaa').name = 'Updated brand';
+  renamed.reels[0].brandId = renamed.brands[0].id;
+  renamed.brands[0].name = 'Updated brand';
   assert.equal(validateContent(renamed).reels[0].brand, 'Updated brand');
 });
 
-test('drafts stay out of public content, including links to unpublished creator names', () => {
+test('drafts stay out of public content, including links to unpublished creators and brands', () => {
   const load = loadBackend();
   const { initialContent } = load('content-seed.ts');
   const { publicContent } = load('content.ts');
   const content = structuredClone(initialContent);
   content.creators.find(item => item.id === 'anaya').published = false;
-  content.brands.find(item => item.id === 'nykaa').published = false;
+  content.reels[0].brandId = content.brands[0].id;
+  content.brands[0].published = false;
   content.reels[1].published = false;
   const visible = publicContent(content);
   assert.equal(visible.creators.length, 3);
   assert.equal(visible.reels.length, 4);
   assert.equal(visible.reels[0].creatorId, '');
   assert.equal(visible.reels[0].creator, '');
-  assert.equal(visible.brands.length, 5);
+  assert.equal(visible.brands.length, content.brands.length - 1);
   assert.equal(visible.reels[0].brandId, '');
   assert.equal(visible.reels[0].brand, '');
 });
@@ -285,19 +287,20 @@ test('saving rejects unsupported media links, wrong upload types, missing files,
 test('old persisted stores gain seeded brands and matching reel relationships without changing their revision', async () => {
   await withUploadStore(async ({ store, directory }) => {
     const legacy = await store.readContent();
+    const seededBrands = structuredClone(legacy.brands);
     delete legacy.brands;
     legacy.reels.forEach(item => { delete item.brandId; });
-    legacy.reels[0].brand = ' nYkAa ';
+    legacy.reels[0].brand = ` ${seededBrands[0].name.toLowerCase()} `;
     await fs.writeFile(path.join(directory, 'content.json'), JSON.stringify(legacy));
     const migrated = await store.readContent();
     assert.equal(migrated.revision, legacy.revision);
-    assert.equal(migrated.brands.length, 6);
-    assert.equal(migrated.reels[0].brandId, 'nykaa');
-    assert.equal(migrated.reels[0].brand, 'Nykaa');
-    migrated.brands[0].description = 'Existing wordmark remains editable.';
+    assert.equal(migrated.brands.length, seededBrands.length);
+    assert.equal(migrated.reels[0].brandId, seededBrands[0].id);
+    assert.equal(migrated.reels[0].brand, seededBrands[0].name);
+    migrated.brands[0].description = 'Existing brand logo remains editable.';
     const saved = await store.saveContent(migrated);
-    assert.equal(saved.brands[0].logo, '');
-    assert.equal(saved.brands[0].description, 'Existing wordmark remains editable.');
+    assert.equal(saved.brands[0].logo, seededBrands[0].logo);
+    assert.equal(saved.brands[0].description, 'Existing brand logo remains editable.');
   });
 });
 

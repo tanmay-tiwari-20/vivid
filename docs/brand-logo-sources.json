@@ -1,0 +1,138 @@
+[
+  {
+    "id": "masai",
+    "brand": "Masai",
+    "websiteUrl": "https://www.masaischool.com",
+    "sourceUrl": "https://cdn.masaischool.com/masai-website/Masai_Logo_dark_web_b21aab8c62.webp",
+    "localPath": "/images/brands/masai.png"
+  },
+  {
+    "id": "upgrad",
+    "brand": "upGrad",
+    "websiteUrl": "https://www.upgrad.com/dba-from-golden-gate-university/",
+    "sourceUrl": "https://assets.upgrad.com/3736/_next/static/media/upgrad-header-logo.325f003e.svg",
+    "localPath": "/images/brands/upgrad.png"
+  },
+  {
+    "id": "futurense",
+    "brand": "Futurense",
+    "websiteUrl": "https://www.futurense.com",
+    "sourceUrl": "https://www.futurense.com/",
+    "localPath": "/images/brands/futurense.png"
+  },
+  {
+    "id": "naukri",
+    "brand": "Naukri",
+    "websiteUrl": "https://www.naukri.com/registration/createAccount",
+    "sourceUrl": "https://www.logolabs.org/storage/brand-logos/naukri.svg",
+    "localPath": "/images/brands/naukri.png",
+    "note": "Vector mirror verified against the official Naukri header logo; used for display resolution."
+  },
+  {
+    "id": "pw",
+    "brand": "PW",
+    "websiteUrl": "https://www.pw.live",
+    "sourceUrl": "https://static.pw.live/5eb393ee95fab7468a79d189/GLOBAL_CMS/f10eb934-422b-448f-aa2c-157078acb032.webp",
+    "localPath": "/images/brands/pw.png"
+  },
+  {
+    "id": "acadally-ai",
+    "brand": "Acadally AI",
+    "websiteUrl": "https://acadally.ai",
+    "sourceUrl": "https://cdn.acadally.com/leap2-data/media/acadally-web/acadally-header-main-logo.svg",
+    "localPath": "/images/brands/acadally-ai.png"
+  },
+  {
+    "id": "iqoo",
+    "brand": "iQOO",
+    "websiteUrl": "https://www.iqoo.com/in",
+    "sourceUrl": "https://www.iqoo.com/in",
+    "localPath": "/images/brands/iqoo.png"
+  },
+  {
+    "id": "scaler",
+    "brand": "Scaler",
+    "websiteUrl": "https://www.scaler.com",
+    "sourceUrl": "https://www.scaler.com/storyblok-assets/f/290352327034910/190x40/762eb27df8/scaler-logo.svg",
+    "localPath": "/images/brands/scaler.png"
+  },
+  {
+    "id": "emergent-ai",
+    "brand": "Emergent AI",
+    "websiteUrl": "https://app.emergent.sh/landing/",
+    "sourceUrl": "https://assets.emergent.sh/assets/emergent-logo-new-black.svg",
+    "localPath": "/images/brands/emergent-ai.png"
+  },
+  {
+    "id": "euron-plus",
+    "brand": "Euron Plus",
+    "websiteUrl": "https://euron.one/plus",
+    "sourceUrl": "https://euron.one/icons/logo-light.svg",
+    "localPath": "/images/brands/euron-plus.png"
+  },
+  {
+    "id": "newton-school",
+    "brand": "Newton School",
+    "websiteUrl": "https://www.newtonschool.co/newton-school-of-technology-nst/home",
+    "sourceUrl": "https://d3dyfaf3iutrxo.cloudfront.net/general/upload/f966abf737734a13852e407e3faeb421.avif",
+    "localPath": "/images/brands/newton-school.png"
+  },
+  {
+    "id": "codex",
+    "brand": "Codex",
+    "websiteUrl": "https://openai.com/codex/",
+    "sourceUrl": "https://images.ctfassets.net/kftzwdyauwt9/53QFGSGDJnCJxvj45fA6ev/bda24475ea40905884a9ca8c49ff3135/get-started-codex.png",
+    "localPath": "/images/brands/codex.png",
+    "note": "Official Codex symbol, center-cropped from OpenAI Academy artwork; colors and shape preserved."
+  },
+  {
+    "id": "woxsen",
+    "brand": "Woxsen",
+    "websiteUrl": "https://woxsen.edu.in",
+    "sourceUrl": "https://woxsen.edu.in/uploads/L20241112111757.webp",
+    "localPath": "/images/brands/woxsen.png"
+  },
+  {
+    "id": "emversity",
+    "brand": "Emversity",
+    "websiteUrl": "https://emversity.com",
+    "sourceUrl": "https://emversity.com/",
+    "localPath": "/images/brands/emversity.png",
+    "note": "Official inline header SVG rendered in its dark wordmark color for a light background."
+  },
+  {
+    "id": "buniyaadplus",
+    "brand": "Buniyaadplus",
+    "websiteUrl": "https://www.buniyaadplus.live",
+    "sourceUrl": "https://d502jbuhuh9wk.cloudfront.net/logos/688b79c9c5dd1a603e231d26.png?v=4",
+    "localPath": "/images/brands/buniyaadplus.png"
+  },
+  {
+    "id": "bosscoder",
+    "brand": "Bosscoder",
+    "websiteUrl": "https://www.bosscoderacademy.com",
+    "sourceUrl": "https://www.bosscoderacademy.com/_next/static/media/bosscoder_colored_logo.2b39d282.svg",
+    "localPath": "/images/brands/bosscoder.png"
+  },
+  {
+    "id": "geeksforgeeks",
+    "brand": "GeeksforGeeks",
+    "websiteUrl": "https://www.geeksforgeeks.org",
+    "sourceUrl": "https://media.geeksforgeeks.org/wp-content/cdn-uploads/20200817185016/gfg_complete_logo_2x-min.png",
+    "localPath": "/images/brands/geeksforgeeks.png"
+  },
+  {
+    "id": "final-round-ai",
+    "brand": "Final Round AI",
+    "websiteUrl": "https://www.finalroundai.com",
+    "sourceUrl": "https://www.finalroundai.com/asset/brand/final-round-logo.svg",
+    "localPath": "/images/brands/final-round-ai.png"
+  },
+  {
+    "id": "naresh-it",
+    "brand": "Naresh IT",
+    "websiteUrl": "https://nareshit.in/artificial-intelligence-training/",
+    "sourceUrl": "https://nareshit.in/wp-content/uploads/2023/02/nareshitechnologies-png-logo.png",
+    "localPath": "/images/brands/naresh-it.png"
+  }
+]

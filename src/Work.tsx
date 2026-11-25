@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUpRight, Eye, Instagram, Play, Search, Sparkles, Users } from 'lucide-react';
+import { ArrowUpRight, Eye, Instagram, Play, Search, Sparkles, Users, X } from 'lucide-react';
 import type { Brand, Reel } from './lib/content-types';
 import { EmptyContent } from './ContentBrowser';
 import WorkHero from './WorkHero';
@@ -15,22 +15,24 @@ function Project({ campaign, index, onCampaign }: { campaign: Reel; index: numbe
   return <article className="work-project">
     <button className={`work-project-image${instagram ? ' is-instagram-reel' : ''}`} onClick={() => onCampaign(campaign)} aria-label={`Watch ${campaign.title}${instagram ? ' — Instagram Reel' : ''}`}>
       <img src={campaign.image} alt={campaign.title} loading="lazy" />
-      <span className="work-project-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+      <span className="work-project-number" aria-hidden="true">{String(index + 1).padStart(2, '0')} / STORY</span>
       <span className="work-project-format"><Instagram size={13} aria-hidden="true" /> {instagram ? 'INSTAGRAM REEL' : 'REEL'}</span>
       <span className="work-project-play" aria-hidden="true"><Play size={21} fill="currentColor" /></span>
       {campaign.brand && <span className="work-project-tag">{campaign.brand}</span>}
     </button>
-    <div className="work-project-heading">
-      <div>{campaign.category && <span className="work-project-category">{campaign.category}</span>}<h3><button onClick={() => onCampaign(campaign)}>{campaign.title}</button></h3></div>
-      <button className="work-project-open" onClick={() => onCampaign(campaign)} aria-label={`View ${campaign.title}`}><ArrowUpRight size={24} aria-hidden="true" /></button>
-    </div>
-    {(/* campaign.creator || */ campaign.views || campaign.reach) && <div className="work-project-bottom">
+    <div className="work-project-details">
+      <div className="work-project-heading">
+        <div>{campaign.category && <span className="work-project-category">{campaign.category}</span>}<h3><button onClick={() => onCampaign(campaign)}>{campaign.title}</button></h3></div>
+        <button className="work-project-open" onClick={() => onCampaign(campaign)} aria-label={`View ${campaign.title}`}><ArrowUpRight size={20} aria-hidden="true" /></button>
+      </div>
+      {(/* campaign.creator || */ campaign.views || campaign.reach) && <div className="work-project-bottom">
       {/* Creator attribution is temporarily disabled: {campaign.creator && <span className="work-project-creator">with {campaign.creator}</span>} */}
       {(campaign.views || campaign.reach) && <div className="work-project-metrics">
         {campaign.views && <span><Eye size={14} aria-hidden="true" /><strong>{campaign.views}</strong> {/* {campaign.demo ? 'example views' : 'views'} */} views</span>}
         {campaign.reach && <span><Users size={14} aria-hidden="true" /><strong>{campaign.reach}</strong> {/* {campaign.demo ? 'example reach' : 'reach'} */} reach</span>}
       </div>}
-    </div>}
+      </div>}
+    </div>
   </article>;
 }
 
@@ -50,13 +52,10 @@ export default function Work({ campaigns, brands, onCampaign }: WorkProps) {
 
     <section id="work-library" className="work-library" aria-labelledby="work-library-heading">
       <div className="container">
-        <div className="work-library-heading"><div><span className="work-kicker">THE COLLECTION</span><h2 id="work-library-heading">The work, up close<span>.</span></h2></div><label className="work-search"><Search size={17} aria-hidden="true" />
-          {/* <input type="search" aria-label="Search stories, brands, or creators" placeholder="Find a story, brand, or creator" value={query} onChange={event => setQuery(event.target.value)} maxLength={150} /> */}
-          <input type="search" aria-label="Search stories or brands" placeholder="Find a story or brand" value={query} onChange={event => setQuery(event.target.value)} maxLength={150} />
-        </label></div>
+        <div className="work-library-heading"><div><span className="work-kicker"><span /> THE COLLECTION</span><h2 id="work-library-heading">Stories worth<br /><em>stopping for.</em></h2></div><p>Fresh perspectives. Vivid ideas.<br />A closer look at the stories we bring to life.</p></div>
         <div className="work-library-toolbar">
-          <div className="work-categories" role="group" aria-label="Filter stories by category"><button aria-pressed={!activeCategory} onClick={() => setCategory(null)}>All work</button>{categories.map(value => <button key={value} aria-pressed={activeCategory === value} onClick={() => setCategory(value)}>{value.toLowerCase()}</button>)}</div>
-          <span className="work-results" role="status">{String(filtered.length).padStart(2, '0')} {filtered.length === 1 ? 'story' : 'stories'}</span>
+          <div className="work-library-filterbar"><div className="work-search"><Search size={18} aria-hidden="true" /><input type="search" aria-label="Search stories or brands" placeholder="Find a story or brand" value={query} onChange={event => setQuery(event.target.value)} maxLength={150} />{query && <button className="work-search-clear" onClick={() => setQuery('')} aria-label="Clear search"><X size={16} aria-hidden="true" /></button>}</div><span className="work-results" role="status"><strong>{String(filtered.length).padStart(2, '0')}</strong> {filtered.length === 1 ? 'story' : 'stories'} to explore</span></div>
+          <div className="work-categories" role="group" aria-label="Filter stories by category"><button aria-pressed={!activeCategory} onClick={() => setCategory(null)}>All work <span>{campaigns.length}</span></button>{categories.map(value => <button key={value} aria-pressed={activeCategory === value} onClick={() => setCategory(value)}>{value.toLowerCase()} <span>{campaigns.filter(campaign => campaign.category === value).length}</span></button>)}</div>
         </div>
         {filtered.length > 0 ? <div className="work-projects">{filtered.map((campaign, index) => <Project key={campaign.id} campaign={campaign} index={index} onCampaign={onCampaign} />)}</div> : <div className="work-empty"><EmptyContent title={hasFilters ? 'No stories match just yet.' : 'The next story is on its way.'} text={hasFilters ? /* 'Try another brand, creator, or category to find your kind of story.' */ 'Try another brand or category to find your kind of story.' : 'Check back soon for fresh ideas and new connections.'} />{hasFilters && <button className="work-reset" onClick={() => { setQuery(''); setCategory(null); }}>Show all stories <ArrowUpRight size={17} aria-hidden="true" /></button>}</div>}
         <div className="work-library-note"><Sparkles size={20} aria-hidden="true" /><p>Different stories. One thing in common: a connection that counts.</p><a className="work-back-top" href="#work">Back to top <ArrowUpRight size={16} aria-hidden="true" /></a></div>

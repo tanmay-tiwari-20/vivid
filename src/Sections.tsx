@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowUpRight, AudioLines, Asterisk, ChartNoAxesCombined, ChevronDown, Pause, Play, UsersRound } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, AudioLines, Asterisk, ChartNoAxesCombined, ChevronDown, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import type { Brand /* , Creator */ } from './lib/content-types';
 // import { ContentFilters, EmptyContent } from './ContentBrowser';
@@ -54,24 +54,128 @@ function BrandMark({ brand }: { brand: Brand }) {
     : <BrandWordmark brand={brand} />;
 }
 
+function BrandTile({ brand, duplicate = false }: { brand: Brand; duplicate?: boolean }) {
+  return <article className="vmw-brand-tile">
+    <div className="vmw-brand-tile-mark" aria-hidden="true"><BrandMark brand={brand} /></div>
+    <div className="vmw-brand-tile-bottom">
+      <div className="vmw-brand-tile-details"><h3>{brand.name}</h3>{brand.category && <p>{brand.category}</p>}</div>
+      {brand.websiteUrl && <a className="vmw-brand-tile-link" href={brand.websiteUrl} target="_blank" rel="noopener noreferrer" tabIndex={duplicate ? -1 : undefined} aria-label={`Visit ${brand.name}'s website (opens in a new tab)`}><ArrowUpRight size={19} aria-hidden="true" /></a>}
+    </div>
+    {brand.description && <p className="vmw-brand-tile-description">{brand.description}</p>}
+  </article>;
+}
+
+function BrandRail({ brands, reverse, paused }: { brands: Brand[]; reverse: boolean; paused: boolean }) {
+  const viewport = useRef<HTMLDivElement>(null);
+  const group = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    const rail = viewport.current;
+    const firstGroup = group.current;
+    if (!rail || !firstGroup || paused) return;
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let frame = 0;
+    let lastTime = 0;
+    let visible = false;
+    let loopWidth = firstGroup.offsetWidth;
+    let position = rail.scrollLeft;
+
+    const animate = (time: number) => {
+      frame = 0;
+      if (!visible || motion.matches || document.hidden || !loopWidth) return;
+      if (!initialized.current) {
+        position = reverse ? 128 : 0;
+        initialized.current = true;
+      }
+      // Native scrolling keeps swipe browsing and keyboard focus in the same coordinate space.
+      const distance = lastTime ? Math.min(time - lastTime, 48) * .026 : 0;
+      lastTime = time;
+      position = (position + (reverse ? -distance : distance) + loopWidth) % loopWidth;
+      rail.scrollLeft = position;
+      frame = window.requestAnimationFrame(animate);
+    };
+    const syncAnimation = () => {
+      window.cancelAnimationFrame(frame);
+      frame = 0;
+      lastTime = 0;
+      position = rail.scrollLeft;
+      if (visible && !motion.matches && !document.hidden) frame = window.requestAnimationFrame(animate);
+    };
+    const intersection = new IntersectionObserver(entries => {
+      visible = entries[0].isIntersecting;
+      syncAnimation();
+    }, { rootMargin: '80px' });
+    const resize = new ResizeObserver(() => {
+      loopWidth = firstGroup.offsetWidth;
+      syncAnimation();
+    });
+    intersection.observe(rail);
+    resize.observe(firstGroup);
+    motion.addEventListener('change', syncAnimation);
+    document.addEventListener('visibilitychange', syncAnimation);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      intersection.disconnect();
+      resize.disconnect();
+      motion.removeEventListener('change', syncAnimation);
+      document.removeEventListener('visibilitychange', syncAnimation);
+    };
+  }, [brands, reverse, paused]);
+
+  return <div className="vmw-brand-rail" ref={viewport}>
+    <div className="vmw-brand-rail-track">
+      <div className="vmw-brand-rail-group" ref={group}>{brands.map(brand => <BrandTile key={brand.id} brand={brand} />)}</div>
+      <div className="vmw-brand-rail-group vmw-brand-rail-copy" aria-hidden="true">{brands.map(brand => <BrandTile key={brand.id} brand={brand} duplicate />)}</div>
+    </div>
+  </div>;
+}
+
 export function Brands({ brands, fullPage = false }: { brands: Brand[]; fullPage?: boolean }) {
-  const [paused, setPaused] = useState(false);
-  const publishedBrands = brands.filter(brand => brand.published);
+  const [browsing, setBrowsing] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const browsingTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(browsingTimer.current), []);
+  const resumeAfterBrowsing = () => {
+    window.clearTimeout(browsingTimer.current);
+    setBrowsing(true);
+    browsingTimer.current = window.setTimeout(() => setBrowsing(false), 2500);
+  };
+  const publishedBrands = useMemo(() => brands.filter(brand => brand.published), [brands]);
+  const rows = useMemo(() => {
+    const split = Math.ceil(publishedBrands.length / 2);
+    return [publishedBrands.slice(0, split), publishedBrands.slice(split)];
+  }, [publishedBrands]);
   if (!publishedBrands.length) return null;
-  const marqueeBrands = Array.from({ length: Math.ceil(6 / publishedBrands.length) }, () => publishedBrands).flat();
+  const moving = publishedBrands.length > 6;
+
+  if (!fullPage) return <section className="vmw-brands vmw-brands-showcase" id="brands" aria-labelledby="brands-heading">
+    <div className="container vmw-brand-showcase-heading">
+      <div><h2 className="section-heading" id="brands-heading">Big names.<br /><span className="vmw-brand-heading-accent">Vivid connections.</span></h2></div>
+      <div className="vmw-brand-showcase-intro"><span className="vmw-brand-lineup-label"><Asterisk size={17} aria-hidden="true" /> THE COMPANY WE KEEP</span><p>Different worlds. Shared ambition.<br />Meet the brands we bring into the conversation.</p></div>
+    </div>
+    <div className={`vmw-brand-showcase-rails${moving ? '' : ' is-static'}`}
+      onPointerEnter={event => { if (event.pointerType === 'mouse') setHovered(true); }}
+      onPointerLeave={() => setHovered(false)}
+      onPointerDown={event => { if (event.pointerType !== 'mouse') { window.clearTimeout(browsingTimer.current); setBrowsing(true); } }}
+      onPointerUp={event => { if (event.pointerType !== 'mouse') resumeAfterBrowsing(); }}
+      onPointerCancel={event => { if (event.pointerType !== 'mouse') resumeAfterBrowsing(); }}
+      onWheel={event => { if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) resumeAfterBrowsing(); }}
+      onFocusCapture={() => setFocused(true)}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setFocused(false); }}>
+      {moving ? rows.map((row, index) => <BrandRail key={index} brands={row} reverse={index === 1} paused={browsing || hovered || focused} />) : <div className="container vmw-brand-showcase-grid">{publishedBrands.map(brand => <BrandTile key={brand.id} brand={brand} />)}</div>}
+    </div>
+    <div className="container vmw-brand-showcase-footer">
+      <div className="vmw-brand-showcase-note"><span className="vmw-brand-count">{String(publishedBrands.length).padStart(2, '0')}</span><p>Distinct brands.<br /><strong>One shared creative energy.</strong></p></div>
+      <div className="vmw-brand-showcase-actions">
+        <Link className="vmw-text-link" href="/work">See the stories <ArrowUpRight size={17} aria-hidden="true" /></Link>
+      </div>
+    </div>
+  </section>;
+
   return (
-    <section className={`vmw-brands vmw-brands-dynamic${fullPage ? ' vmw-brands-work' : ''}`} id="brands" aria-labelledby="brands-heading">
-      {!fullPage && <>
-        <div className="container vmw-brands-heading"><p>BIG IDEAS. FAMILIAR NAMES.</p></div>
-        <div className={`vmw-brands-window${paused ? ' is-paused' : ''}`}>
-          <div className="vmw-brands-track">
-            {[0, 1].map(copy => <div className="vmw-brands-set" key={copy} aria-hidden={copy === 1 ? true : undefined}>{marqueeBrands.map((brand, index) => <span className="vmw-brand-marquee-item" key={`${copy}-${index}-${brand.id}`} aria-hidden={index >= publishedBrands.length ? true : undefined}><BrandMark brand={brand} /></span>)}</div>)}
-          </div>
-        </div>
-        <div className="container vmw-brands-bottom">
-          {/* <p>{publishedBrands.some(brand => brand.demo) ? 'Illustrative brand lineup · Demo concept' : 'Distinct brands. Shared creative ambition.'}</p> */}
-          <p>Distinct brands. Shared creative ambition.</p><button className="vmw-marquee-control" onClick={() => setPaused(value => !value)} aria-pressed={paused} aria-label={paused ? 'Resume brand marquee' : 'Pause brand marquee'}>{paused ? <Play size={13} fill="currentColor" /> : <Pause size={13} fill="currentColor" />}<span>{paused ? 'Resume' : 'Pause'}</span></button></div>
-      </>}
+    <section className="vmw-brands vmw-brands-dynamic vmw-brands-work" id="brands" aria-labelledby="brands-heading">
       <div className="container vmw-brand-directory">
         <div className="vmw-brand-directory-heading">
           <div><span className="eyebrow">BRANDS IN THE SPOTLIGHT</span><h2 className="section-heading" id="brands-heading">The brands behind<br/><span className="vmw-lime-text">the stories.</span></h2></div>

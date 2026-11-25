@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef, useState, type FormEvent, type ReactNode, type CSSProperties } from 'react';
-import { ArrowUpRight, ArrowRight, ArrowLeft, ArrowDown, Play, Menu, X, Plus, Instagram, Eye, Users, Check, Download, Sparkles } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
+import { ArrowUpRight, ArrowRight, ArrowLeft, ArrowDown, Play, Menu, X, Plus, Instagram, Eye, Users, Mail, Phone, Sparkles } from 'lucide-react';
 import { About, Brands, Strategy, Footer, type ContactType } from './Sections';
 // import { Creators } from './Sections'; // Creators are temporarily disabled.
 import Link from 'next/link';
@@ -18,7 +18,6 @@ import ApproachPage from './ApproachPage';
 type ContactHandler = (type: ContactType) => void;
 type Campaign = Reel;
 type CampaignHandler = (campaign: Campaign) => void;
-type Brief = { name: string; email: string; company: string; message: string; type: ContactType };
 
 function Nav({ onContact, page }: { onContact: ContactHandler; page: string }) {
   const [open, setOpen] = useState(false);
@@ -176,8 +175,22 @@ function Modal({ children, onClose, title, className = '' }: { children: ReactNo
 
 // function CampaignModal({ campaign, onClose, onContact, creator, onCreator }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler; creator?: Creator; onCreator: (creator: Creator) => void }) {
 function CampaignModal({ campaign, onClose, onContact }: { campaign: Campaign; onClose: () => void; onContact: ContactHandler }) {
-  if (getInstagramReel(campaign.video)) return <Modal onClose={onClose} title={campaign.title} className="campaign-modal instagram-reel-modal"><ReelPlayer reel={campaign} /></Modal>;
-  return <Modal onClose={onClose} title={campaign.title} className="campaign-modal"><ReelPlayer reel={campaign} /><div className="campaign-detail"><div className="eyebrow"><span /> {campaign.category}</div><span className="detail-brand">{campaign.brand}</span><h2>{campaign.title}</h2><p>{campaign.description}</p>{/* {campaign.creator && <div className="detail-creator">Created with {creator ? <button className="creator-inline-link" onClick={() => onCreator(creator)}>{creator.name}<ArrowUpRight size={14} /></button> : <strong>{campaign.creator}</strong>}</div>} */}{(campaign.views || campaign.reach) && <div className="detail-metrics">{campaign.views && <div><strong>{campaign.views}</strong><span>Views</span></div>}{campaign.reach && <div><strong>{campaign.reach}</strong><span>Reach</span></div>}</div>}<button className="button button-lime" onClick={() => onContact('brand')}>Create a story like this <ArrowUpRight size={18} /></button>{/* {campaign.demo && <p className="disclosure">A sample concept with stock media. Creator profiles, brand associations, and figures are illustrative.</p>} */}</div></Modal>;
+  return <Modal onClose={onClose} title={campaign.title} className={`campaign-modal${getInstagramReel(campaign.video) ? ' instagram-reel-modal' : ''}`}>
+    <ReelPlayer reel={campaign} />
+    <div className="campaign-detail">
+      <div className="eyebrow"><span /> {campaign.category}</div>
+      <span className="detail-brand">{campaign.brand}</span>
+      <h2>{campaign.title}</h2>
+      <p>{campaign.description}</p>
+      {/* {campaign.creator && <div className="detail-creator">Created with {creator ? <button className="creator-inline-link" onClick={() => onCreator(creator)}>{creator.name}<ArrowUpRight size={14} /></button> : <strong>{campaign.creator}</strong>}</div>} */}
+      {(campaign.views || campaign.reach) && <div className="detail-metrics">
+        {campaign.views && <div><strong>{campaign.views}</strong><span>Views</span></div>}
+        {campaign.reach && <div><strong>{campaign.reach}</strong><span>Reach</span></div>}
+      </div>}
+      <button className="button button-lime" onClick={() => onContact('brand')}>Create a story like this <ArrowUpRight size={18} /></button>
+      {/* {campaign.demo && <p className="disclosure">A sample concept with stock media. Creator profiles, brand associations, and figures are illustrative.</p>} */}
+    </div>
+  </Modal>;
 }
 
 /* Creator profiles are temporarily disabled.
@@ -186,21 +199,23 @@ function CreatorModal({ creator, reels, onClose, onContact, onCampaign }: { crea
 }
 */
 
-function ContactModal({ initialType, onClose }: { initialType: ContactType; onClose: () => void }) {
-  const [type, setType] = useState(initialType);
-  const [submitted, setSubmitted] = useState(false);
-  const nameInput = useRef<HTMLInputElement>(null);
-  const downloadButton = useRef<HTMLButtonElement>(null);
-  useEffect(() => { if (submitted) downloadButton.current?.focus(); else nameInput.current?.focus(); }, [submitted]);
-  const [brief, setBrief] = useState<Brief>({ name: '', email: '', company: '', message: '', type: initialType });
-  const submit = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); const data = new FormData(e.currentTarget); setBrief({ name: String(data.get('name') || ''), email: String(data.get('email') || ''), company: String(data.get('company') || ''), message: String(data.get('message') || ''), type }); setSubmitted(true); };
-  const download = () => {
-    const text = `VIVID MEDIA WORKS — ${type === 'brand' ? 'CAMPAIGN' : 'CREATOR'} BRIEF\n\nName: ${brief.name}\nEmail: ${brief.email}\n${type === 'brand' ? 'Brand' : 'Social profile'}: ${brief.company}\n\nThe idea\n${brief.message}\n\nPrepared for Vivid Media Works. Save this brief for your next conversation.\n`;
-    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
-    const a = document.createElement('a'); a.href = url; a.download = 'vivid-project-brief.txt'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
-  };
-  return <Modal onClose={onClose} title={submitted ? 'Your brief is ready' : 'Let’s make something vivid'} className="contact-modal">
-    {!submitted ? <><div className="eyebrow"><span /> GOOD THINGS START WITH A HELLO</div><h2>Got an idea?<br /><span>Let’s make it vivid.</span></h2><div className="contact-type" role="group" aria-label="Enquiry type"><button className={type === 'brand' ? 'selected' : ''} aria-pressed={type === 'brand'} onClick={() => setType('brand')}>I’m a brand <ArrowUpRight size={17} /></button>{/* <button className={type === 'creator' ? 'selected' : ''} aria-pressed={type === 'creator'} onClick={() => setType('creator')}>I’m a creator <Sparkles size={17} /></button> */}</div><form onSubmit={submit}><div className="form-row"><label>Your name<input ref={nameInput} name="name" defaultValue={brief.name} placeholder="The name behind the idea" required autoComplete="name" maxLength={100} /></label><label>Email address<input name="email" defaultValue={brief.email} type="email" placeholder="you@example.com" required autoComplete="email" maxLength={200} /></label></div><label>{type === 'brand' ? 'Brand / company' : 'Your social profile'}<input name="company" defaultValue={brief.company} placeholder={type === 'brand' ? 'Who are we creating for?' : '@yourhandle or profile URL'} required maxLength={200} /></label><label>{type === 'brand' ? 'Tell us a little about your idea' : 'Tell us about your content'}<textarea name="message" defaultValue={brief.message} placeholder={type === 'brand' ? 'The big idea, the audience, the what-if…' : 'Your niche, your community, and what you want to create…'} rows={3} required maxLength={3000} /></label><button type="submit" className="button button-lime">Create my brief <ArrowRight size={19} /></button><p className="form-note">Create a brief to download and keep for your next conversation.</p></form></> : <div className="contact-success"><span className="success-icon"><Check size={34} /></span><div className="eyebrow">THE BEGINNING OF SOMETHING VIVID</div><h2>Your brief<br /><span>is ready.</span></h2><p>Thanks, {brief.name.split(' ')[0]}. Your idea is taking shape. Download your brief and keep it ready for your next conversation.</p><button ref={downloadButton} className="button button-lime" onClick={download}>Download my brief <Download size={18} /></button><button className="text-button" onClick={() => setSubmitted(false)}>Back to my brief <ArrowLeft size={16} /></button><p className="form-note">Your brief is ready to download and share.</p></div>}
+function ContactModal({ onClose }: { onClose: () => void }) {
+  return <Modal onClose={onClose} title="Contact Vivid Media Works" className="contact-modal">
+    <div className="eyebrow"><span /> GOOD THINGS START WITH A HELLO</div>
+    <h2>Got an idea?<br /><span>Let’s make it vivid.</span></h2>
+    <p className="contact-intro">Have a project in mind? Email us or give us a call. We’d love to hear from you.</p>
+    <address className="contact-details">
+      <a className="contact-detail-link" href="mailto:vividmediaworks23@gmail.com">
+        <span className="contact-detail-icon"><Mail size={22} aria-hidden="true" /></span>
+        <span className="contact-detail-copy"><small>Email us</small><strong>vividmediaworks23@gmail.com</strong></span>
+        <ArrowUpRight size={20} aria-hidden="true" />
+      </a>
+      <a className="contact-detail-link" href="tel:+916305191511">
+        <span className="contact-detail-icon"><Phone size={22} aria-hidden="true" /></span>
+        <span className="contact-detail-copy"><small>Call us</small><strong>6305191511</strong></span>
+        <ArrowUpRight size={20} aria-hidden="true" />
+      </a>
+    </address>
   </Modal>;
 }
 
@@ -261,6 +276,6 @@ export default function App({ initialContent, page = 'home' }: { initialContent:
     {/* <CampaignModal key={campaign.id} campaign={campaign} onClose={() => setCampaignId(null)} onContact={onContact} creator={content.creators.find(profile => profile.id === campaign.creatorId)} onCreator={onCreator} /> */}
     {campaign && <CampaignModal key={campaign.id} campaign={campaign} onClose={() => setCampaignId(null)} onContact={onContact} />}
     {/* {creator && <CreatorModal key={creator.id} creator={creator} reels={content.reels.filter(reel => reel.creatorId === creator.id)} onClose={() => setCreatorId(null)} onContact={onContact} onCampaign={onCampaign} />} */}
-    {contact && <ContactModal initialType={contact} onClose={() => setContact(null)} />}
+    {contact && <ContactModal onClose={() => setContact(null)} />}
   </div>;
 }

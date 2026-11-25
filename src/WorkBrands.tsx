@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUpRight, Play, Sparkles } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { Brand, Reel } from './lib/content-types';
 
 type WorkBrandsProps = { brands: Brand[]; campaigns: Reel[]; onCampaign: (campaign: Reel) => void };
@@ -16,16 +16,16 @@ function BrandWordmark({ brand }: { brand: Brand }) {
   </span>;
 }
 
-function BrandCard({ brand, index, campaign, onCampaign }: { brand: Brand; index: number; campaign?: Reel; onCampaign: WorkBrandsProps['onCampaign'] }) {
+function BrandCard({ brand, campaign, onCampaign }: { brand: Brand; campaign?: Reel; onCampaign: WorkBrandsProps['onCampaign'] }) {
   const [failedSource, setFailedSource] = useState('');
   return <article className="work-brands-card">
-    <div className="work-brands-card-top"><span className="work-brands-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><span className="work-brands-card-dot" aria-hidden="true" /></div>
-    <h3 className="work-brands-mark">{brand.logo && failedSource !== brand.logo ? <img src={brand.logo} alt={brand.name} loading="lazy" width="220" height="88" onError={() => setFailedSource(brand.logo)} /> : <BrandWordmark brand={brand} />}</h3>
-    <div className="work-brands-details">{brand.category && <p className="work-brands-category">{brand.category}</p>}{brand.description && <p className="work-brands-description">{brand.description}</p>}</div>
-    {(campaign || brand.websiteUrl) && <div className="work-brands-card-bottom">
-      {campaign && <button className="work-brands-story" onClick={() => onCampaign(campaign)} aria-label={`Explore ${brand.name}'s story: ${campaign.title}`}><span className="work-brands-story-icon"><Play size={11} fill="currentColor" aria-hidden="true" /></span>Explore the story <ArrowUpRight size={16} aria-hidden="true" /></button>}
-      {brand.websiteUrl && <a className="work-brands-website" href={brand.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${brand.name}'s website (opens in a new tab)`}>Website <ArrowUpRight size={15} aria-hidden="true" /></a>}
-    </div>}
+    <div className="work-brands-mark" aria-hidden="true">{brand.logo && failedSource !== brand.logo ? <img src={brand.logo} alt="" loading="lazy" width="200" height="72" onError={() => setFailedSource(brand.logo)} /> : <BrandWordmark brand={brand} />}</div>
+    <div className="work-brands-card-heading">
+      <div className="work-brands-details"><h3>{brand.name}</h3>{brand.category && <p className="work-brands-category">{brand.category}</p>}</div>
+      {brand.websiteUrl && <a className="work-brands-website" href={brand.websiteUrl} target="_blank" rel="noopener noreferrer" aria-label={`Visit ${brand.name}'s website (opens in a new tab)`}><ArrowUpRight size={18} aria-hidden="true" /></a>}
+    </div>
+    {brand.description && <p className="work-brands-description">{brand.description}</p>}
+    {campaign && <div className="work-brands-card-bottom"><button className="work-brands-story" onClick={() => onCampaign(campaign)} aria-label={`View ${brand.name}'s story: ${campaign.title}`}>View story <ArrowUpRight size={15} aria-hidden="true" /></button></div>}
   </article>;
 }
 
@@ -33,8 +33,7 @@ export default function WorkBrands({ brands, campaigns, onCampaign }: WorkBrands
   const publishedBrands = brands.filter(brand => brand.published);
   if (!publishedBrands.length) return null;
   return <section className="work-brands" id="brands" aria-labelledby="work-brands-heading"><div className="container">
-    <div className="work-brands-heading"><div><span className="work-brands-kicker"><span /> THE BRAND LINEUP</span><h2 id="work-brands-heading">Good brands.<br /><em>Great company.</em></h2></div><div className="work-brands-intro"><Sparkles size={26} strokeWidth={1.3} aria-hidden="true" /><p>Different worlds. Shared creative energy. Bringing brands and creators together to make something worth connecting with.</p></div></div>
-    <div className="work-brands-grid" data-count={publishedBrands.length}>{publishedBrands.map((brand, index) => <BrandCard key={brand.id} brand={brand} index={index} campaign={campaigns.find(campaign => campaign.published && campaign.brandId === brand.id)} onCampaign={onCampaign} />)}</div>
-    <div className="work-brands-footnote"><span><span /> DIFFERENT NAMES. ONE VIVID POINT OF VIEW.</span>{/* {publishedBrands.some(brand => brand.demo) && <p>A sample brand lineup. Brand associations are illustrative.</p>} */}</div>
+    <div className="work-brands-heading"><div><span className="work-brands-kicker"><span aria-hidden="true" /> THE BRAND DIRECTORY</span><h2 id="work-brands-heading">In good <em>company.</em></h2></div><p className="work-brands-intro">From education to emerging tech,<br />meet the brands behind the work.</p></div>
+    <div className="work-brands-grid" data-count={publishedBrands.length}>{publishedBrands.map(brand => <BrandCard key={brand.id} brand={brand} campaign={campaigns.find(campaign => campaign.published && campaign.brandId === brand.id)} onCampaign={onCampaign} />)}</div>
   </div></section>;
 }

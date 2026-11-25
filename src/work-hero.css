@@ -1,240 +1,158 @@
+/* Editorial introduction with a single framed feature and a second story. */
 .work-page .work-hero {
-  padding-top: 38px;
-  background: linear-gradient(180deg, var(--bg) 70%, #f8fcfa);
+  background: radial-gradient(ellipse at 86% 25%, #e8f2e980, transparent 55%), #f7f9f5;
+  scroll-margin-top: 90px;
 }
-.work-page .work-hero-topline { display: flex; align-items: center; justify-content: space-between; gap: 24px; }
-.work-page .work-hero-topline .eyebrow { font-size: 10px; letter-spacing: .16em; }
-.work-page .work-hero-topline > span:last-child { color: var(--muted); font-size: 9px; line-height: 1.6; letter-spacing: .1em; text-align: right; }
-.work-page .work-hero-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 54px; padding-block: 25px 26px; }
-.work-page .work-hero-copy, .work-page .work-hero-art { min-width: 0; }
-.work-page .work-hero-copy h1 { font-size: clamp(68px, 7.6vw, 106px); font-weight: 700; line-height: 1.04; letter-spacing: -.067em; }
-.work-page .work-hero-accent { display: block; position: relative; width: fit-content; max-width: 100%; padding-right: 20px; }
-.work-page .work-hero-accent em { position: relative; color: var(--work-ink); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -.075em; line-height: 1.13; }
-.work-page .work-hero-accent em::after { content: ''; position: absolute; bottom: -.055em; left: 0; width: 96%; height: .075em; border-radius: 50%; background: var(--lime); opacity: .28; transform: rotate(-2deg); }
-.work-page .work-hero-heading-star { position: absolute; right: -26px; top: -56%; width: 50px; height: 50px; color: var(--lime); transform: rotate(12deg); }
-.work-page .work-hero-copy > p { max-width: 365px; margin-top: 26px; color: var(--muted); font-size: 14px; line-height: 1.85; text-wrap: pretty; }
-.work-page .work-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 24px; margin-top: 27px; }
-.work-page .work-hero-browse { display: inline-flex; align-items: center; justify-content: center; gap: 26px; min-height: 50px; padding: 14px 22px; border-radius: 999px; background: var(--text); color: white; font-size: 12px; font-weight: 600; transition: background .2s, transform .2s; }
-.work-page .work-hero-browse:hover { background: var(--work-ink); transform: translateY(-2px); }
-.work-page .work-hero-watch { display: inline-flex; align-items: center; gap: 10px; min-height: 46px; padding: 0; background: transparent; font-size: 12px; font-weight: 600; }
-.work-page .work-hero-watch > span { display: grid; place-items: center; width: 32px; height: 32px; padding-left: 2px; border: 1px solid var(--line); border-radius: 50%; transition: background .2s, border-color .2s; }
-.work-page .work-hero-watch:hover > span { background: var(--lime); border-color: var(--lime); }
-.work-page .work-hero-community { display: flex; align-items: center; gap: 14px; margin-top: 32px; }
-.work-page .work-hero-avatars { display: flex; flex-shrink: 0; padding-left: 8px; }
-.work-page .work-hero-avatars > img { width: 37px; height: 37px; margin-left: -8px; border: 3px solid white; border-radius: 50%; object-fit: cover; object-position: center 25%; }
-.work-page .work-hero-community > div:last-child { min-width: 0; }
-.work-page .work-hero-community strong { display: block; font-size: 11px; font-weight: 600; line-height: 1.6; }
-.work-page .work-hero-community span { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; line-height: 1.6; }
-
-.work-page .work-hero-stage { position: relative; height: 480px; isolation: isolate; }
-.work-page .work-hero-stage::before { content: ''; position: absolute; inset: 20px 0 5px; z-index: -2; border-radius: 50%; background: radial-gradient(ellipse, #d5f5e9, #effaf6 58%, transparent 72%); }
-.work-page .work-hero-orbit { position: absolute; top: 28px; left: 0; right: 0; height: 415px; z-index: -1; border: 1px solid #1ec89a35; border-radius: 50%; transform: rotate(-14deg); }
-.work-page .work-hero-orbit-inner { inset: 65px 34px auto; height: 340px; border-style: dashed; border-color: #1ec89a25; transform: rotate(14deg); }
-.work-page .work-hero-cross { position: absolute; top: 30px; left: 10px; color: var(--work-ink); font-size: 28px; line-height: 1; font-weight: 300; }
-.work-page .work-hero-film { position: absolute; top: 21px; left: 45%; z-index: 2; width: 62%; height: 421px; max-width: 326px; padding: 0; border: 5px solid white; border-radius: 18px; overflow: hidden; background: var(--surface); color: white; text-align: left; transform: translateX(-50%) rotate(-5deg); box-shadow: 0 22px 50px #17282225, 0 5px 12px #1728220c; transition: transform .6s var(--work-ease); }
-.work-page .work-hero-film > img, .work-page .work-hero-peek > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 28%; transition: transform .6s var(--work-ease); }
-.work-page .work-hero-film::after, .work-page .work-hero-peek::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #17282225, transparent 38%, #172822b0); pointer-events: none; }
-.work-page .work-hero-film-label { position: absolute; top: 18px; left: 15px; right: 15px; z-index: 1; display: flex; align-items: center; gap: 7px; width: fit-content; max-width: calc(100% - 30px); padding: 8px 11px; border: 1px solid #ffffff50; border-radius: 999px; background: #17282230; backdrop-filter: blur(8px); font-size: 8px; font-weight: 600; letter-spacing: .1em; line-height: 1.5; }
-.work-page .work-hero-film-label > span { width: 5px; height: 5px; background: var(--lime); border-radius: 50%; flex-shrink: 0; }
-.work-page .work-hero-film-play { position: absolute; top: 48%; left: 50%; z-index: 1; display: grid; place-items: center; width: 66px; height: 66px; padding-left: 3px; border: 1px solid #ffffffa0; border-radius: 50%; background: #ffffff18; backdrop-filter: blur(5px); transform: translate(-50%, -50%); transition: background .2s, color .2s, border-color .2s; }
-.work-page .work-hero-film-caption { position: absolute; bottom: 24px; left: 19px; right: 19px; z-index: 1; padding-right: 40px; }
-.work-page .work-hero-film-caption > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 34px; font-weight: 700; line-height: 1.1; letter-spacing: -.04em; }
-.work-page .work-hero-film-caption > small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 8px; font-size: 8px; line-height: 1.7; letter-spacing: .08em; }
-.work-page .work-hero-film-caption > span { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #ffffff60; border-radius: 50%; }
-.work-page .work-hero-film:hover { transform: translateX(-50%) translateY(-4px) rotate(-3deg); }
-.work-page .work-hero-film:hover .work-hero-film-play { background: var(--lime); border-color: var(--lime); color: var(--text); }
-.work-page .work-hero-peek { position: absolute; top: 132px; right: 0; z-index: 1; width: 34%; height: 252px; padding: 0; border: 3px solid white; border-radius: 15px; overflow: hidden; background: var(--surface); color: white; text-align: left; transform: rotate(9deg); box-shadow: 0 12px 28px #17282218; transition: transform .6s var(--work-ease); }
-.work-page .work-hero-peek > span { position: absolute; left: 13px; right: 13px; bottom: 19px; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 16px; font-weight: 650; line-height: 1.3; overflow-wrap: anywhere; }
-.work-page .work-hero-peek > span > strong { display: -webkit-box; min-width: 0; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font: inherit; }
-.work-page .work-hero-peek > span > svg { flex-shrink: 0; }
-.work-page .work-hero-peek:hover { transform: translateY(-3px) rotate(6deg); }
-.work-page .work-hero-film:focus-visible, .work-page .work-hero-peek:focus-visible { outline-offset: 4px; }
-.work-page .work-hero-stamp { position: absolute; right: 4px; top: 14px; z-index: 3; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px; width: 100px; height: 100px; border-radius: 50%; background: var(--lime); color: var(--text); text-align: center; transform: rotate(10deg); box-shadow: 0 5px 0 #1728220a; }
-.work-page .work-hero-stamp > span { font-size: 9px; line-height: 1.4; letter-spacing: .03em; }
-.work-page .work-hero-stamp strong { font-weight: 800; }
-.work-page .work-hero-result { position: absolute; bottom: 20px; left: 0; z-index: 3; display: flex; align-items: center; gap: 13px; min-width: 174px; max-width: 45%; padding: 15px 20px; border: 1px solid var(--line); border-radius: 14px; background: white; box-shadow: 0 12px 25px #17282212; transform: rotate(-3deg); }
-.work-page .work-hero-result > svg { color: var(--work-ink); flex-shrink: 0; }
-.work-page .work-hero-result > div { min-width: 0; }
-.work-page .work-hero-result strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 25px; line-height: 1.15; letter-spacing: -.04em; font-weight: 700; }
-.work-page .work-hero-result span { display: block; margin-top: 5px; color: var(--muted); font-size: 9px; line-height: 1.5; }
-.work-page .work-hero-art-note { position: absolute; bottom: 9px; right: 8px; max-width: 43%; color: var(--work-ink); font-family: Georgia, 'Times New Roman', serif; font-style: italic; font-size: 17px; line-height: 1.3; text-align: right; transform: rotate(-5deg); }
-.work-page .work-hero-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; min-height: 450px; border-radius: 40% 40% 20px 20px; background: var(--surface); text-align: center; }
-.work-page .work-hero-placeholder > svg { width: 90px; height: 90px; color: var(--lime); }
-.work-page .work-hero-placeholder p { font-size: 38px; font-weight: 600; line-height: 1.2; letter-spacing: -.04em; }
-.work-page .work-hero-placeholder p em { color: var(--work-ink); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
-.work-page .work-hero-placeholder > span { color: var(--muted); font-size: 12px; line-height: 1.6; }
-
-.work-page .work-hero-footnote { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 18px 32px; color: var(--muted); }
-.work-page .work-hero-footnote > span { display: inline-flex; align-items: center; gap: 8px; font-size: 8px; line-height: 1.7; letter-spacing: .08em; }
-.work-page .work-hero-footnote > p { font-size: 9px; line-height: 1.6; text-align: right; }
-
+.work-page .work-hero-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 72px;
+  padding-block: 62px 52px;
+}
+.work-page .work-hero-copy,
+.work-page .work-hero-art { min-width: 0; }
+.work-page .work-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 26px;
+  padding: 8px 12px;
+  border: 1px solid #dce7da;
+  border-radius: 999px;
+  background: #ffffff80;
+  color: #416b54;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .13em;
+}
+.work-page .work-hero-kicker > span { width: 5px; height: 5px; flex-shrink: 0; border-radius: 50%; background: var(--work-ink, #158465); }
+.work-page .work-hero-copy h1 { font-size: clamp(64px, 7.5vw, 108px); font-weight: 750; line-height: 1.02; letter-spacing: -.065em; }
+.work-page .work-hero-copy h1 em { color: var(--work-ink, #158465); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; letter-spacing: -.065em; }
+.work-page .work-hero-copy > p { max-width: 375px; margin-top: 28px; color: #67796c; font-size: 15px; line-height: 1.85; text-wrap: pretty; }
+.work-page .work-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 25px; margin-top: 31px; }
+.work-page .work-hero-browse { display: inline-flex; align-items: center; justify-content: center; gap: 26px; min-height: 52px; padding: 15px 24px; border-radius: 999px; background: #172822; color: #fff; font-size: 12px; font-weight: 650; transition: background .25s, transform .25s; }
+.work-page .work-hero-watch { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; padding: 0; background: transparent; font-size: 12px; font-weight: 650; }
+.work-page .work-hero-watch > span { display: grid; place-items: center; width: 34px; height: 34px; padding-left: 2px; border: 1px solid #d2dfd3; border-radius: 50%; background: #fff; color: var(--work-ink, #158465); transition: background .25s, border-color .25s; }
+.work-page .work-hero-copy-note { display: flex; align-items: center; gap: 13px; margin-top: 39px; color: #758273; font-size: 10px; line-height: 1.75; }
+.work-page .work-hero-note-line { width: 34px; height: 1px; flex-shrink: 0; background: #adc7b4; }
+.work-page .work-hero-copy-note strong { color: #3a5546; font-weight: 600; }
+.work-page .work-hero-stage { display: grid; gap: 12px; }
+.work-page .work-hero-film {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: clamp(365px, min(36vw, 58svh), 480px);
+  padding: 0;
+  border: 7px solid #fff;
+  border-radius: 26px;
+  overflow: hidden;
+  background: #c8d7c5;
+  box-shadow: 0 18px 48px #17282212, 0 0 0 1px #dce5d9;
+  color: #fff;
+  text-align: left;
+}
+.work-page .work-hero-film > img { width: 100%; height: 100%; object-fit: cover; object-position: center 27%; transition: transform .6s var(--work-ease, ease); }
+.work-page .work-hero-film::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, #12281e38, transparent 35%, #0b211ed9); pointer-events: none; }
+.work-page .work-hero-film-topline { position: absolute; top: 19px; inset-inline: 19px; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.work-page .work-hero-film-label { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 1px solid #ffffff35; border-radius: 999px; background: #102c2352; backdrop-filter: blur(8px); font-size: 8px; font-weight: 650; letter-spacing: .1em; line-height: 1.5; }
+.work-page .work-hero-film-label > span { width: 4px; height: 4px; border-radius: 50%; background: #92f7cb; flex-shrink: 0; }
+.work-page .work-hero-result { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; line-height: 1.4; }
+.work-page .work-hero-result strong { font-size: 12px; font-weight: 750; }
+.work-page .work-hero-result > span { color: #ffffffb5; }
+.work-page .work-hero-film-play { position: absolute; top: 44%; left: 50%; z-index: 1; display: grid; place-items: center; width: 64px; height: 64px; padding-left: 3px; border: 1px solid #ffffff90; border-radius: 50%; background: #ffffff20; backdrop-filter: blur(8px); transform: translate(-50%, -50%); transition: background .25s, color .25s, border-color .25s; }
+.work-page .work-hero-film-caption { position: absolute; bottom: 26px; inset-inline: 25px; z-index: 1; padding-right: 50px; }
+.work-page .work-hero-film-brand { display: block; margin-bottom: 10px; color: #ffffffc9; font-size: 11px; font-weight: 650; line-height: 1.5; }
+.work-page .work-hero-film-caption > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: clamp(27px, 2.4vw, 36px); font-weight: 650; line-height: 1.15; letter-spacing: -.045em; }
+.work-page .work-hero-film-caption > small { display: block; margin-top: 12px; color: #ffffffb0; font-size: 8px; font-weight: 500; line-height: 1.7; letter-spacing: .09em; }
+.work-page .work-hero-film-arrow { position: absolute; right: 0; bottom: 0; display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #ffffff50; border-radius: 50%; }
+.work-page .work-hero-peek { display: flex; align-items: center; gap: 15px; min-width: 0; padding: 9px 16px 9px 9px; border: 1px solid #dfe7dd; border-radius: 18px; background: #ffffffbd; text-align: left; transition: background .25s, border-color .25s; }
+.work-page .work-hero-peek-image { position: relative; width: 60px; height: 62px; flex-shrink: 0; border-radius: 10px; overflow: hidden; background: #dfe9da; }
+.work-page .work-hero-peek-image img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; }
+.work-page .work-hero-peek-image::after { content: ''; position: absolute; inset: 0; background: #10271d26; }
+.work-page .work-hero-peek-image svg { position: absolute; top: 50%; left: 50%; z-index: 1; color: #fff; transform: translate(-50%, -50%); }
+.work-page .work-hero-peek-copy { min-width: 0; flex: 1; }
+.work-page .work-hero-peek-copy > small { display: block; color: #71806f; font-size: 10px; line-height: 1.5; }
+.work-page .work-hero-peek-copy > strong { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin-top: 4px; font-size: 13px; font-weight: 650; line-height: 1.5; letter-spacing: -.2px; }
+.work-page .work-hero-peek-arrow { display: grid; place-items: center; width: 38px; height: 38px; flex-shrink: 0; border: 1px solid #e0e8dc; border-radius: 50%; color: #345744; }
+.work-page .work-hero-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 23px; min-height: 430px; padding: 32px; border: 1px solid #dbe7d5; border-radius: 26px; background: #edf3e9; text-align: center; }
+.work-page .work-hero-placeholder-icon { display: grid; place-items: center; width: 84px; height: 84px; border: 1px solid #c5d9c3; border-radius: 50%; color: var(--work-ink, #158465); }
+.work-page .work-hero-placeholder p { font-size: 38px; font-weight: 650; line-height: 1.2; letter-spacing: -.05em; }
+.work-page .work-hero-placeholder p em { color: var(--work-ink, #158465); font-family: Georgia, 'Times New Roman', serif; font-weight: 400; }
+.work-page .work-hero-placeholder > span:last-child { color: #6d7d69; font-size: 12px; line-height: 1.7; }
+.work-page .work-hero-footnote { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding-block: 21px 24px; border-top: 1px solid #dfe7da; color: #6c7c69; font-size: 9px; font-weight: 600; line-height: 1.7; letter-spacing: .08em; }
+.work-page .work-hero-footnote > a { display: inline-flex; align-items: center; gap: 10px; min-height: 28px; letter-spacing: .02em; }
+@media (hover: hover) {
+  .work-page .work-hero-browse:hover { background: var(--work-ink, #158465); transform: translateY(-2px); }
+  .work-page .work-hero-watch:hover > span { background: #dff3e7; border-color: #a6cfb5; }
+  .work-page .work-hero-film:hover > img { transform: scale(1.04); }
+  .work-page .work-hero-film:hover .work-hero-film-play { background: #fff; border-color: #fff; color: #172822; }
+  .work-page .work-hero-peek:hover { background: #fff; border-color: #b8d3b8; }
+}
 @media (max-width: 1150px) {
-  .work-page .work-hero-layout { gap: 30px; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); }
-  .work-page .work-hero-copy h1 { font-size: clamp(65px, 7.6vw, 90px); }
-  .work-page .work-hero-heading-star { width: 40px; height: 40px; right: -20px; }
-  .work-page .work-hero-stage { height: 445px; }
-  .work-page .work-hero-film { height: 387px; width: 65%; }
-  .work-page .work-hero-peek { top: 128px; height: 228px; right: 3px; }
-  .work-page .work-hero-orbit { height: 385px; }
-  .work-page .work-hero-orbit-inner { height: 305px; }
-  .work-page .work-hero-stamp { width: 88px; height: 88px; right: 0; }
-  .work-page .work-hero-stamp > span { font-size: 8px; }
-  .work-page .work-hero-art-note { font-size: 15px; }
+  .work-page .work-hero-layout { gap: 40px; padding-block: 48px 40px; }
+  .work-page .work-hero-copy h1 { font-size: clamp(61px, 7.4vw, 88px); }
+  .work-page .work-hero-copy > p { font-size: 14px; }
+  .work-page .work-hero-film { height: 400px; }
+  .work-page .work-hero-film-caption { inset-inline: 20px; bottom: 22px; }
 }
 @media (max-width: 900px) {
-  .work-page .work-hero { padding-top: 30px; }
-  .work-page .work-hero-layout { gap: 20px; }
-  .work-page .work-hero-copy h1 { font-size: clamp(56px, 7.6vw, 70px); }
-  .work-page .work-hero-accent { padding-right: 4px; }
-  .work-page .work-hero-heading-star { width: 30px; height: 30px; right: 0; top: -65%; }
-  .work-page .work-hero-copy > p { font-size: 12px; margin-top: 22px; }
-  .work-page .work-hero-actions { gap: 15px; margin-top: 22px; }
-  .work-page .work-hero-browse { font-size: 11px; gap: 14px; padding-inline: 17px; }
+  .work-page .work-hero-layout { gap: 30px; }
+  .work-page .work-hero-copy h1 { font-size: clamp(56px, 7.4vw, 68px); }
+  .work-page .work-hero-copy > p { font-size: 13px; margin-top: 23px; }
+  .work-page .work-hero-actions { gap: 17px; margin-top: 24px; }
+  .work-page .work-hero-browse { gap: 15px; padding-inline: 19px; font-size: 11px; }
   .work-page .work-hero-watch { font-size: 11px; gap: 8px; }
-  .work-page .work-hero-community { gap: 10px; margin-top: 25px; }
-  .work-page .work-hero-community strong { font-size: 10px; }
-  .work-page .work-hero-community span { font-size: 9px; }
-  .work-page .work-hero-avatars > img { width: 31px; height: 31px; }
-  .work-page .work-hero-stage { height: 403px; }
-  .work-page .work-hero-film { top: 25px; height: 339px; border-width: 4px; }
-  .work-page .work-hero-film-label { top: 13px; left: 10px; right: 10px; padding: 7px 8px; font-size: 6px; }
-  .work-page .work-hero-film-caption { left: 14px; right: 14px; bottom: 20px; }
-  .work-page .work-hero-film-caption > strong { font-size: 28px; }
-  .work-page .work-hero-film-caption > small { font-size: 7px; }
-  .work-page .work-hero-film-play { width: 52px; height: 52px; }
-  .work-page .work-hero-peek { height: 190px; top: 118px; }
-  .work-page .work-hero-peek > span { font-size: 13px; left: 10px; right: 10px; }
-  .work-page .work-hero-orbit { height: 340px; }
-  .work-page .work-hero-orbit-inner { height: 260px; }
-  .work-page .work-hero-stamp { width: 74px; height: 74px; gap: 5px; }
-  .work-page .work-hero-stamp > svg { width: 19px; height: 19px; }
-  .work-page .work-hero-stamp > span { font-size: 7px; }
-  .work-page .work-hero-result { min-width: 148px; max-width: 50%; padding: 12px 15px; gap: 10px; bottom: 25px; }
-  .work-page .work-hero-result strong { font-size: 22px; }
-  .work-page .work-hero-art-note { font-size: 13px; }
+  .work-page .work-hero-copy-note { margin-top: 30px; }
+  .work-page .work-hero-film { height: 374px; }
+  .work-page .work-hero-film-topline { top: 14px; inset-inline: 13px; flex-wrap: wrap; gap: 9px; }
+  .work-page .work-hero-result { font-size: 9px; }
+  .work-page .work-hero-result strong { font-size: 10px; }
+  .work-page .work-hero-film-caption > strong { font-size: 27px; }
+  .work-page .work-hero-peek { gap: 11px; padding-right: 11px; }
+  .work-page .work-hero-peek-image { width: 52px; height: 57px; }
+  .work-page .work-hero-peek-copy > strong { font-size: 11px; }
+  .work-page .work-hero-peek-arrow { width: 32px; height: 32px; }
 }
-@media (max-width: 700px) {
-  .work-page .work-hero-topline > span:last-child { max-width: 160px; font-size: 7px; }
-  .work-page .work-hero-topline .eyebrow { font-size: 9px; }
-  .work-page .work-hero-layout { grid-template-columns: minmax(0, 1fr); gap: 25px; padding-top: 33px; }
-  .work-page .work-hero-copy h1 { font-size: clamp(63px, 12.5vw, 84px); }
-  .work-page .work-hero-accent { padding-right: 15px; }
-  .work-page .work-hero-heading-star { width: 40px; height: 40px; right: 0; top: -66%; }
-  .work-page .work-hero-copy > p { font-size: 13px; max-width: 420px; margin-top: 22px; }
-  .work-page .work-hero-actions { gap: 23px; }
-  .work-page .work-hero-browse { font-size: 12px; gap: 22px; padding-inline: 20px; }
+@media (max-width: 760px) {
+  .work-page .work-hero-layout { grid-template-columns: minmax(0, 1fr); gap: 35px; padding-block: 36px 30px; }
+  .work-page .work-hero-kicker { margin-bottom: 22px; }
+  .work-page .work-hero-copy h1 { font-size: clamp(60px, 12.8vw, 87px); }
+  .work-page .work-hero-copy > p { max-width: 420px; font-size: 14px; }
+  .work-page .work-hero-actions { gap: 24px; }
+  .work-page .work-hero-browse { font-size: 12px; padding-inline: 22px; gap: 24px; }
   .work-page .work-hero-watch { font-size: 12px; }
-  .work-page .work-hero-community { margin-top: 25px; }
-  .work-page .work-hero-community strong { font-size: 11px; }
-  .work-page .work-hero-community span { font-size: 10px; }
-  .work-page .work-hero-avatars > img { width: 35px; height: 35px; }
-  .work-page .work-hero-stage { height: 460px; max-width: 470px; margin-inline: auto; }
-  .work-page .work-hero-film { width: 61%; height: 401px; left: 45%; }
-  .work-page .work-hero-film-label { font-size: 8px; top: 17px; left: 14px; }
-  .work-page .work-hero-film-caption { left: 18px; right: 18px; }
+  .work-page .work-hero-copy-note { display: none; }
+  .work-page .work-hero-stage { max-width: 510px; margin-inline: auto; }
+  .work-page .work-hero-film { height: 430px; border-width: 6px; }
+  .work-page .work-hero-film-topline { inset-inline: 17px; top: 18px; }
+  .work-page .work-hero-film-caption { inset-inline: 22px; bottom: 24px; }
   .work-page .work-hero-film-caption > strong { font-size: 32px; }
-  .work-page .work-hero-film-caption > small { font-size: 8px; }
-  .work-page .work-hero-film-play { width: 62px; height: 62px; }
-  .work-page .work-hero-peek { width: 35%; height: 239px; top: 126px; right: 6px; }
-  .work-page .work-hero-peek > span { font-size: 16px; }
-  .work-page .work-hero-orbit { height: 395px; transform: none; }
-  .work-page .work-hero-orbit-inner { height: 305px; }
-  .work-page .work-hero-stamp { width: 91px; height: 91px; right: 8px; }
-  .work-page .work-hero-stamp > span { font-size: 8px; }
-  .work-page .work-hero-stamp > svg { width: 22px; height: 22px; }
-  .work-page .work-hero-result { min-width: 170px; max-width: 52%; bottom: 20px; left: 5px; padding: 14px 17px; }
-  .work-page .work-hero-result strong { font-size: 25px; }
-  .work-page .work-hero-art-note { font-size: 16px; right: 12px; bottom: 8px; }
-  .work-page .work-hero-footnote { padding-bottom: 27px; }
-  .work-page .work-hero-footnote > span { max-width: 58%; font-size: 7px; }
-  .work-page .work-hero-footnote > p { max-width: 165px; font-size: 8px; }
-  .work-page .work-hero-placeholder { min-height: 350px; }
+  .work-page .work-hero-peek-image { width: 62px; height: 62px; }
+  .work-page .work-hero-peek-copy > strong { font-size: 13px; }
 }
 @media (max-width: 480px) {
-  .work-page .work-hero { padding-top: 26px; }
-  .work-page .work-hero-copy h1 { font-size: clamp(55px, 14.7vw, 69px); }
-  .work-page .work-hero-heading-star { width: 34px; height: 34px; }
-  .work-page .work-hero-copy > p { font-size: 12px; }
-  .work-page .work-hero-actions { gap: 18px; }
-  .work-page .work-hero-browse { min-height: 48px; font-size: 11px; gap: 16px; padding-inline: 18px; }
+  .work-page .work-hero-layout { padding-top: 30px; gap: 31px; }
+  .work-page .work-hero-copy h1 { font-size: clamp(53px, 14.4vw, 69px); }
+  .work-page .work-hero-copy > p { margin-top: 22px; font-size: 13px; }
+  .work-page .work-hero-actions { gap: 18px; margin-top: 25px; }
+  .work-page .work-hero-browse { padding-inline: 18px; gap: 17px; font-size: 11px; min-height: 49px; }
   .work-page .work-hero-watch { font-size: 11px; }
-  .work-page .work-hero-community span { font-size: 9px; }
-  .work-page .work-hero-stage { height: 395px; }
-  .work-page .work-hero-film { height: 341px; width: 65%; left: 44%; }
-  .work-page .work-hero-film-label { font-size: 6px; padding: 7px 8px; left: 11px; }
-  .work-page .work-hero-film-caption { left: 14px; right: 14px; }
-  .work-page .work-hero-film-caption > strong { font-size: 28px; }
+  .work-page .work-hero-film { height: 372px; border-radius: 23px; }
+  .work-page .work-hero-film-topline { inset-inline: 13px; top: 15px; gap: 8px; }
+  .work-page .work-hero-film-label { font-size: 7px; padding: 7px 9px; }
+  .work-page .work-hero-film-caption { inset-inline: 17px; padding-right: 44px; }
+  .work-page .work-hero-film-caption > strong { font-size: 29px; }
   .work-page .work-hero-film-caption > small { font-size: 7px; }
-  .work-page .work-hero-film-play { width: 55px; height: 55px; }
-  .work-page .work-hero-peek { height: 202px; top: 119px; width: 34%; right: 5px; }
-  .work-page .work-hero-peek > span { font-size: 13px; left: 10px; right: 10px; }
-  .work-page .work-hero-stamp { width: 77px; height: 77px; right: 4px; top: 15px; }
-  .work-page .work-hero-stamp > span { font-size: 7px; }
-  .work-page .work-hero-orbit { height: 337px; }
-  .work-page .work-hero-orbit-inner { height: 265px; inset-inline: 25px; }
-  .work-page .work-hero-cross { font-size: 23px; left: 2px; top: 19px; }
-  .work-page .work-hero-result { min-width: 145px; max-width: 52%; padding: 12px 14px; left: 0; bottom: 20px; }
-  .work-page .work-hero-result strong { font-size: 22px; }
-  .work-page .work-hero-result span { font-size: 8px; }
-  .work-page .work-hero-art-note { right: 6px; bottom: 9px; font-size: 13px; }
-  .work-page .work-hero-footnote { flex-direction: column; align-items: start; gap: 8px; }
-  .work-page .work-hero-footnote > span, .work-page .work-hero-footnote > p { max-width: 100%; text-align: left; }
-}
-@media (max-width: 360px) {
-  .work-page .work-hero-copy h1 { font-size: 52px; }
-  .work-page .work-hero-heading-star { width: 28px; height: 28px; }
-  .work-page .work-hero-actions { gap: 14px; }
-  .work-page .work-hero-browse { padding-inline: 15px; gap: 12px; }
-  .work-page .work-hero-watch { gap: 7px; font-size: 10px; }
-  .work-page .work-hero-stage { height: 363px; }
-  .work-page .work-hero-film { height: 307px; }
-  .work-page .work-hero-peek { height: 180px; top: 105px; }
-  .work-page .work-hero-stamp { width: 66px; height: 66px; }
-  .work-page .work-hero-stamp > svg { width: 17px; height: 17px; }
-  .work-page .work-hero-stamp > span { font-size: 6px; }
-  .work-page .work-hero-orbit { height: 308px; }
-  .work-page .work-hero-orbit-inner { height: 240px; }
-  .work-page .work-hero-art-note { font-size: 12px; max-width: 40%; }
+  .work-page .work-hero-film-play { width: 58px; height: 58px; }
+  .work-page .work-hero-peek { border-radius: 15px; }
+  .work-page .work-hero-peek-copy > strong { font-size: 12px; }
+  .work-page .work-hero-footnote { font-size: 8px; padding-block: 17px 20px; gap: 13px; }
+  .work-page .work-hero-placeholder { min-height: 340px; }
+  .work-page .work-hero-placeholder p { font-size: 32px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .work-page :where(.work-hero-browse, .work-hero-watch > span, .work-hero-film, .work-hero-film > img, .work-hero-film-play, .work-hero-peek, .work-hero-peek > img) { transition: none; }
-}
-
-@media (min-width: 701px) {
-  .work-page .work-hero { padding-top: 0; }
-  .work-page .work-hero > .container {
-    display: grid;
-    grid-template-rows: auto 1fr auto;
-    min-height: calc(100svh - var(--site-header-height, 76px));
-  }
-  .work-page .work-hero-topline { padding-top: 30px; }
-  .work-page .work-hero-layout { padding-block: 24px; }
-  .work-page .work-hero-footnote { padding-block: 18px 22px; }
-}
-
-@media (min-width: 701px) and (max-height: 850px) {
-  .work-page .work-hero-stage {
-    --work-stage-height: clamp(320px, calc(100svh - 260px), 460px);
-    height: var(--work-stage-height);
-  }
-  .work-page .work-hero-film {
-    top: 4.5%;
-    height: 87%;
-    max-width: calc(var(--work-stage-height) * .7);
-  }
-  .work-page .work-hero-peek { top: 27%; height: 52%; }
-  .work-page .work-hero-orbit { top: 6%; height: 86%; }
-  .work-page .work-hero-orbit-inner { inset: 13.5% 34px auto; height: 71%; }
-  .work-page .work-hero-copy h1 { font-size: clamp(56px, min(7.6vw, 11svh), 90px); }
-  .work-page .work-hero-placeholder { min-height: clamp(320px, calc(100svh - 260px), 450px); }
-}
-
-@media (min-width: 701px) and (max-height: 740px) {
-  .work-page .work-hero-topline { padding-top: 24px; }
-  .work-page .work-hero-layout { padding-block: 18px; }
-  .work-page .work-hero-copy h1 { font-size: clamp(56px, min(7.6vw, 10svh), 82px); }
-  .work-page .work-hero-copy > p { margin-top: 20px; font-size: 13px; }
-  .work-page .work-hero-actions { margin-top: 20px; }
-  .work-page .work-hero-community { margin-top: 24px; }
-  .work-page .work-hero-footnote { padding-block: 16px 20px; }
+  .work-page :where(.work-hero-browse, .work-hero-watch > span, .work-hero-film > img, .work-hero-film-play, .work-hero-peek) { transition: none; }
+  .work-page .work-hero-browse:hover,
+  .work-page .work-hero-film:hover > img { transform: none; }
 }

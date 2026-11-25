@@ -57,7 +57,7 @@ export function validateContent(value: unknown): SiteContent {
   const input = record(value, 'Content');
   const revision = text(input.revision, 'Revision', 100, true);
   if (!Array.isArray(input.reels) || !Array.isArray(input.creators)) throw new ContentError('Reels and creators must be lists.');
-  // Stores written before brands were editable receive the existing wordmarks.
+  // Stores written before brands were editable receive the default brand lineup.
   const brandInput = input.brands === undefined ? structuredClone(initialBrands) : input.brands;
   if (!Array.isArray(brandInput)) throw new ContentError('Brands must be a list.');
   if (input.reels.length > 500 || input.creators.length > 500 || brandInput.length > 500) throw new ContentError('You can save up to 500 reels, 500 creators, and 500 brands.');
